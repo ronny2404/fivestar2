@@ -1,8 +1,9 @@
+/* shared/global.css */
 :root {
-    --primary: #2563eb;
+    --primary: #2563eb; /* Biru modern */
     --primary-dark: #1e40af;
     --bg-app: #ffffff;
-    --surface: #f8fafc;
+    --surface: #f1f5f9; /* Abu-abu sangat muda */
     --text-main: #0f172a;
     --text-sub: #64748b;
 }
@@ -11,7 +12,7 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Roboto', 'Inter', sans-serif;
+    font-family: 'Roboto', 'Inter', sans-serif; /* Font sistem */
     -webkit-tap-highlight-color: transparent; /* Hapus kotak biru saat tap di HP */
 }
 
@@ -21,13 +22,17 @@ html, body {
     overflow: hidden; /* Scroll Lock */
     background-color: var(--bg-app);
     color: var(--text-main);
+    display: flex;
+    flex-direction: column;
 }
 
+/* Lencana status online/offline */
 .badge {
     padding: 4px 12px;
     border-radius: 50px;
     font-size: 10px;
     font-weight: bold;
+    display: inline-block;
 }
 .online { background: #dcfce7; color: #15803d; }
 .offline { background: #fee2e2; color: #b91c1c; }
