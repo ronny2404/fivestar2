@@ -1,15 +1,14 @@
-const userInp = document.getElementById('username');
+import { auth } from "../../firebase.js";
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// Anti-Lost Data
-userInp.value = localStorage.getItem('persistent_user') || '';
-userInp.oninput = () => localStorage.setItem('persistent_user', userInp.value);
+window.login = async function(){
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("password").value;
 
-document.getElementById('do-login').onclick = () => {
-    if(userInp.value.trim() !== "") {
-        sessionStorage.setItem('is_logged_in', 'true');
-        sessionStorage.setItem('session_user', userInp.value);
-        window.location.href = '../dashboard/dashboard.html';
-    } else {
-        alert("Masukkan Username!");
-    }
-};
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+    go("modules/dashboard/dashboard.html");
+  }catch(e){
+    alert(e.message);
+  }
+}
