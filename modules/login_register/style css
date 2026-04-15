@@ -1,4 +1,3 @@
-/* modules/login/login.css */
 .app-container {
     height: 100dvh; /* Dynamic viewport height untuk HP */
     display: flex;
