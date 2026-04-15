@@ -2,60 +2,52 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login System</title>
-    <link rel="stylesheet" href="/fivestar2/shared/global.css">
-    <link rel="stylesheet" href="/fivestar2/modules/login/login.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - Android Style</title>
+    <link rel="stylesheet" href="../../shared/global.css">
+    <link rel="stylesheet" href="login.css">
 </head>
 <body>
-    <div class="main-viewport">
-        <div class="window-container" id="container">
-            
-            <div class="form-container sign-up-container">
-                <form>
-                    <h2 style="margin-bottom: 15px;">Buat Akun</h2>
-                    <input type="text" placeholder="Nama Lengkap" />
-                    <input type="email" placeholder="Email" />
-                    <input type="password" placeholder="Password" />
-                    <button type="button" class="btn-primary">Daftar</button>
-                </form>
-            </div>
+    <div class="app-container">
+        <header class="auth-header">
+            <div id="status-net" class="badge online">● Online</div>
+            <h1 id="auth-title">Selamat Datang</h1>
+            <p id="auth-subtitle">Silahkan masuk ke akun anda</p>
+        </header>
 
-            <div class="form-container sign-in-container">
-                <form>
-                    <h2 style="margin-bottom: 5px;">Masuk</h2>
-                    <div id="status-net" class="badge online" style="margin-bottom: 15px;">● Online</div>
+        <main class="auth-body">
+            <div class="form-wrapper" id="form-wrapper">
+                <form id="login-form" class="auth-form">
+                    <div class="input-group">
+                        <input type="text" id="username" placeholder="Username / Email" required>
+                        <input type="password" id="password" placeholder="Password" required>
+                    </div>
+                    <button type="button" class="btn-main" id="do-login">Login</button>
                     
-                    <input type="text" id="username" placeholder="Username / Email" />
-                    <input type="password" id="password" placeholder="Password" />
+                    <div class="divider"><span>ATAU</span></div>
                     
-                    <button type="button" class="btn-primary" id="do-login">Login</button>
-                    
-                    <div class="divider"><span>atau</span></div>
-                    
-                    <button type="button" class="google-login">
-                        <img src="https://www.google.com/favicon.ico" width="16"> Login dengan Google
+                    <button type="button" class="btn-google">
+                        <img src="https://www.google.com/favicon.ico" width="18">
+                        Lanjut dengan Google
                     </button>
                 </form>
-            </div>
 
-            <div class="overlay-container">
-                <div class="overlay">
-                    <div class="overlay-panel overlay-left">
-                        <h2>Halo Lagi!</h2>
-                        <p>Sudah punya akun? Masuk untuk melanjutkan data anda.</p>
-                        <button class="ghost-btn" id="signIn">MASUK</button>
+                <form id="register-form" class="auth-form hidden">
+                    <div class="input-group">
+                        <input type="text" placeholder="Nama Lengkap">
+                        <input type="email" placeholder="Email Baru">
+                        <input type="password" placeholder="Buat Password">
                     </div>
-                    <div class="overlay-panel overlay-right">
-                        <h2>Selamat Datang!</h2>
-                        <p>Belum punya akun? Daftar sekarang dan nikmati fitur offline mode.</p>
-                        <button class="ghost-btn" id="signUp">DAFTAR</button>
-                    </div>
-                </div>
+                    <button type="button" class="btn-main">Buat Akun</button>
+                </form>
             </div>
+        </main>
 
-        </div>
+        <footer class="auth-footer">
+            <p id="switch-text">Belum punya akun? <span id="toggle-auth">Daftar</span></p>
+        </footer>
     </div>
-    <script src="/fivestar2/modules/login/login.js"></script>
+
+    <script src="login.js"></script>
 </body>
 </html>
