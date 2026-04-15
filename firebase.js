@@ -3,7 +3,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-aut
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSy...",
+  apiKey: "AIzaSyAsINtnmVQthClAReXRk09k-AsDo9VIqDQ",
   authDomain: "five-star-2404.firebaseapp.com",
   databaseURL: "https://five-star-2404-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "five-star-2404"
