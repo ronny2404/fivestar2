@@ -1,4 +1,3 @@
-// modules/login/login.js
 const userInp = document.getElementById('username');
 const statusBadge = document.getElementById('status-net');
 
