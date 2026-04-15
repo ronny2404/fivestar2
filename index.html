@@ -3,43 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Entry App</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4A90E2">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>Gateway - Smart PWA</title>
     
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #4A90E2; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        .status { font-size: 0.8rem; margin-top: 10px; }
-        .online { color: green; }
-        .offline { color: red; }
-    </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<div class="card">
-    <h2>Selamat Datang</h2>
-    <p id="network-status" class="status">Mengecek koneksi...</p>
-    
-    <input type="text" id="username" placeholder="Masukkan Nama (Auto-save)">
-    <button onclick="login()">Masuk</button>
-    
-    <p style="font-size: 0.7rem; color: #666;">Data disimpan otomatis agar tidak hilang.</p>
-</div>
+    <div class="login-container">
+        <div class="card">
+            <div class="header">
+                <h1>Smart App</h1>
+                <div id="status-badge" class="badge checking">Mengecek koneksi...</div>
+            </div>
 
-<script src="app.js"></script>
-<script>
-    // Register Service Worker untuk PWA & Offline Mode
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('SW Registered!'))
-                .catch(err => console.log('SW Registration Failed'));
-        });
-    }
-</script>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Ketik nama Anda..." autocomplete="off">
+                <small>Data otomatis tersimpan agar tidak hilang (Anti-Lost).</small>
+            </div>
+
+            <button id="login-btn">Masuk Ke Aplikasi</button>
+            
+            <div class="footer-info">
+                <p id="session-info">Belum ada sesi aktif</p>
+                <p id="cache-info">Versi: 1.0.0</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Registrasi Service Worker dari Root
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker aktif'))
+                    .catch(err => console.error('SW Gagal:', err));
+            });
+        }
+    </script>
 </body>
 </html>
