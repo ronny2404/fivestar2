@@ -1,18 +1,59 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Smart App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login System</title>
     <link rel="stylesheet" href="../../shared/global.css">
     <link rel="stylesheet" href="login.css">
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <h2>Masuk Aplikasi</h2>
-            <div id="status-online" class="badge">Checking...</div>
-            <input type="text" id="username" placeholder="Nama Anda (Auto-save)">
-            <button id="btn-login" class="btn-primary">Masuk Sekarang</button>
+    <div class="main-viewport">
+        <div class="window-container" id="container">
+            
+            <div class="form-container sign-up-container">
+                <form>
+                    <h2 style="margin-bottom: 15px;">Buat Akun</h2>
+                    <input type="text" placeholder="Nama Lengkap" />
+                    <input type="email" placeholder="Email" />
+                    <input type="password" placeholder="Password" />
+                    <button type="button" class="btn-primary">Daftar</button>
+                </form>
+            </div>
+
+            <div class="form-container sign-in-container">
+                <form>
+                    <h2 style="margin-bottom: 5px;">Masuk</h2>
+                    <div id="status-net" class="badge online" style="margin-bottom: 15px;">● Online</div>
+                    
+                    <input type="text" id="username" placeholder="Username / Email" />
+                    <input type="password" id="password" placeholder="Password" />
+                    
+                    <button type="button" class="btn-primary" id="do-login">Login</button>
+                    
+                    <div class="divider"><span>atau</span></div>
+                    
+                    <button type="button" class="google-login">
+                        <img src="https://www.google.com/favicon.ico" width="16"> Login dengan Google
+                    </button>
+                </form>
+            </div>
+
+            <div class="overlay-container">
+                <div class="overlay">
+                    <div class="overlay-panel overlay-left">
+                        <h2>Halo Lagi!</h2>
+                        <p>Sudah punya akun? Masuk untuk melanjutkan data anda.</p>
+                        <button class="ghost-btn" id="signIn">MASUK</button>
+                    </div>
+                    <div class="overlay-panel overlay-right">
+                        <h2>Selamat Datang!</h2>
+                        <p>Belum punya akun? Daftar sekarang dan nikmati fitur offline mode.</p>
+                        <button class="ghost-btn" id="signUp">DAFTAR</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
     <script src="login.js"></script>
