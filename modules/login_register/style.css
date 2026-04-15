@@ -1,131 +1,70 @@
-.app-container {
-    height: 100dvh; /* Dynamic viewport height untuk HP */
-    display: flex;
-    flex-direction: column;
-    padding: 30px 24px;
-    max-width: 500px; /* Batas lebar agar tidak aneh di tablet */
-    margin: 0 auto;
-}
-
-.auth-header {
-    margin-bottom: 40px;
-    margin-top: 20px;
-}
-
-.auth-header h1 {
-    font-size: 28px;
-    font-weight: 800;
-    margin-top: 15px;
-    color: var(--text-main);
-}
-
-.auth-header p {
-    color: var(--text-sub);
-    font-size: 14px;
-    margin-top: 5px;
-}
-
-.auth-body {
-    flex: 1; /* Isi ruang yang tersisa */
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-input {
-    background: #f1f5f9; /* Abu-abu muda */
-    border: 2px solid transparent;
-    padding: 16px 20px;
-    border-radius: 16px; /* Membulat */
-    font-size: 15px;
-    transition: 0.3s;
-    outline: none;
-    color: var(--text-main);
-}
-
-input:focus {
-    border-color: var(--primary);
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
-}
-
-.btn-main {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 16px;
-    border-radius: 16px;
-    font-size: 16px;
-    font-weight: bold;
-    width: 100%;
-    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
-    cursor: pointer;
-}
-
-.btn-main:active {
-    background: var(--primary-dark);
-}
-
-/* Divider "atau" */
-.divider {
-    text-align: center;
-    margin: 25px 0;
+.login-card {
+    background: #f3f3f3; /* Putih keabuan sedikit */
+    width: 350px;
+    padding: 60px 30px 30px 30px; /* Padding atas besar untuk ruang avatar */
+    border-radius: 4px;
     position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    text-align: center;
 }
-.divider::before {
-    content: "";
+
+/* Lingkaran Avatar di Atas */
+.avatar-circle {
+    width: 90px;
+    height: 90px;
+    background-color: var(--teal);
+    border-radius: 50%;
     position: absolute;
-    top: 50%; left: 0; width: 100%;
-    height: 1px; background: #e2e8f0;
-    z-index: 1;
-}
-.divider span {
-    background: #fff;
-    padding: 0 15px;
-    font-size: 12px;
-    color: #94a3b8;
-    position: relative;
-    z-index: 2;
-}
-
-/* Tombol Google */
-.btn-google {
-    width: 100%;
-    padding: 14px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
+    top: -45px; /* Setengah keluar kotak */
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 12px;
-    font-weight: 600;
-    color: #475569;
-    cursor: pointer;
+    align-items: center;
+    border: 5px solid var(--bg-gray); /* Border warna background agar rapi */
 }
 
-.btn-google:active {
-    background: #f8fafc;
+.avatar-circle img { width: 50px; filter: brightness(0) invert(1); }
+
+h2 { color: #888; font-weight: normal; margin-bottom: 25px; font-size: 24px; }
+
+.input-group { margin-bottom: 15px; text-align: left; }
+
+input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    outline: none;
+    font-size: 16px;
+    color: #666;
 }
 
-.auth-footer {
-    margin-top: auto;
-    text-align: center;
-    padding-bottom: 20px;
-}
-
-.auth-footer p {
-    font-size: 14px;
-    color: var(--text-sub);
-}
-
-.auth-footer a {
-    color: var(--primary);
+.btn-signin {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--teal);
+    border: none;
+    color: white;
     font-weight: bold;
-    text-decoration: none;
+    font-size: 18px;
     cursor: pointer;
+    border-radius: 2px;
+    margin-top: 10px;
 }
+
+.footer-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    font-size: 13px;
+    color: #888;
+}
+
+.signup-link {
+    margin-top: 25px;
+    font-size: 14px;
+    color: white;
+}
+
+.signup-link a { color: white; text-decoration: underline; font-weight: bold; }
