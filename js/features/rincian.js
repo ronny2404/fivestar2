@@ -94,6 +94,7 @@ function bukaMenuRincian(event) {
                         <div class="data-grid rincian-item-animate" style="padding-bottom: 10px; animation-delay: 0.45s;">
                             <div class="data-item"><span>Total Reflexy</span><p id="rTotalReflexy" style="color:#FF9500;">0 Jam</p></div>
                             <div class="data-item"><span>Total Massage</span><p id="rTotalMassage" style="color:#AF52DE;">0 Jam</p></div>
+                            <div class="data-item"><span>Jumlah Hari Kerja</span><p id="rJumlahHari" style="color:#5AC8FA;">0 Hari</p></div>
                             <div class="data-item" style="background: linear-gradient(135deg, #34C759, #30D158); border-radius: 14px; margin-top: 4px;">
                                 <span style="color: rgba(255,255,255,0.9); font-weight: 500;">Grand Total</span>
                                 <p id="rGrandTotal" style="color: white; font-size: 20px;">0 Jam</p>
@@ -150,6 +151,8 @@ async function prosesRincian() {
             fs1: { reflexy: 0, massage: 0 },
             fs2: { reflexy: 0, massage: 0 }
         };
+        
+        let jumlahHari = 0;
 
         if (allMonthsData) {
             // Loop Bulan (Contoh: April_2026, Mei_2026)
@@ -170,6 +173,8 @@ async function prosesRincian() {
                                     target.reflexy += parseFloat(item.detail_jam.reflexy || 0);
                                     target.massage += parseFloat(item.detail_jam.massage || 0);
                                 }
+                                
+                                jumlahHari++;
                             }
                         });
                     });
@@ -198,6 +203,9 @@ async function prosesRincian() {
         setTxt('rTotalReflexy', grandReflexy);
         setTxt('rTotalMassage', grandMassage);
         setTxt('rGrandTotal', grandTotal);
+        
+        // Update jumlah hari
+        document.getElementById('rJumlahHari').innerText = jumlahHari + " Hari";
 
         // Jalankan Animasi
         const resArea = document.getElementById('areaHasilRincian');
