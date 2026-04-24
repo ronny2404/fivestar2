@@ -18,14 +18,12 @@ if (!document.getElementById('rincian-animation-style')) {
         #areaHasilRincian {
             transition: max-height 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
             max-height: 0;
-            overflow-y: auto;
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
+            overflow: hidden;
             opacity: 0;
             display: block !important; 
         }
         #areaHasilRincian.show {
-            max-height: 600px;
+            max-height: 2000px;
             opacity: 1;
         }
     `;
@@ -47,7 +45,7 @@ function bukaMenuRincian(event) {
                 <div class="ios-modal-header" style="flex-shrink: 0;">
                     <h3>Rekap Jam Kerja</h3>
                 </div>
-                <div class="ios-modal-body" style="padding: 0; display: flex; flex-direction: column; flex-grow: 1; overflow: visible;">
+                <div class="ios-modal-body" style="padding: 0; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
                     <div style="padding: 15px 20px; flex-shrink: 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
                         <div style="display: flex; flex-direction: column; gap: 12px;">
                             <div class="input-group">
@@ -63,12 +61,12 @@ function bukaMenuRincian(event) {
                                     style="cursor: pointer; font-weight: 600; text-align: center;">
                             </div>
                         </div>
-                        <button id="btnProsesRincian" onclick="prosesRincian()" style="margin-top:15px; width:100%; border:none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 10px; background: #007AFF; color: white; font-weight: 600; font-size: 15px; cursor: pointer;">
+                        <button id="btnProsesRincian" onclick="prosesRincian()" style="margin-top:15px; width:100%; border:none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; font-size: 16px; font-weight: 600; border-radius: 12px; cursor: pointer; background-color: #007AFF; color: #FFFFFF;">
                             <i class="fa-solid fa-magnifying-glass"></i> Tampilkan Rekap
                         </button>
                     </div>
 
-                    <div id="areaHasilRincian" style="padding: 0 20px 20px 20px; flex-grow: 1; text-align: left;">
+                    <div id="areaHasilRincian" style="padding: 0 20px 20px 20px; overflow-y: auto; flex-grow: 1; text-align: left;">
                         
                         <h4 class="rincian-item-animate" style="margin: 20px 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase; animation-delay: 0.1s;">FIVE STAR 1</h4>
                         <div class="data-grid rincian-item-animate" style="margin-bottom: 16px; animation-delay: 0.15s;">
@@ -94,7 +92,6 @@ function bukaMenuRincian(event) {
                         <div class="data-grid rincian-item-animate" style="padding-bottom: 10px; animation-delay: 0.45s;">
                             <div class="data-item"><span>Total Reflexy</span><p id="rTotalReflexy" style="color:#FF9500;">0 Jam</p></div>
                             <div class="data-item"><span>Total Massage</span><p id="rTotalMassage" style="color:#AF52DE;">0 Jam</p></div>
-                            <div class="data-item"><span>Jumlah Hari Kerja</span><p id="rJumlahHari" style="color:#5AC8FA;">0 Hari</p></div>
                             <div class="data-item" style="background: linear-gradient(135deg, #34C759, #30D158); border-radius: 14px; margin-top: 4px;">
                                 <span style="color: rgba(255,255,255,0.9); font-weight: 500;">Grand Total</span>
                                 <p id="rGrandTotal" style="color: white; font-size: 20px;">0 Jam</p>
@@ -103,7 +100,7 @@ function bukaMenuRincian(event) {
                     </div>
                 </div>
                 <div class="ios-modal-footer-grid" style="grid-template-columns: 1fr; flex-shrink: 0;">
-                    <button onclick="tutupMenuRincian()" style="width: 100%; padding: 15px; background: transparent; border: none; color: #007AFF; font-size: 17px; font-weight: 600; cursor: pointer;">Siap</button>
+                    <button onclick="tutupMenuRincian()" style="width: 100%; padding: 15px; background: transparent; border: none; color: #007AFF; font-size: 17px; font-weight: 600; cursor: pointer; border-top: 1px solid rgba(0,0,0,0.1);">Tutup</button>
                 </div>
             </div>
         `;
@@ -151,8 +148,6 @@ async function prosesRincian() {
             fs1: { reflexy: 0, massage: 0 },
             fs2: { reflexy: 0, massage: 0 }
         };
-        
-        let jumlahHari = 0;
 
         if (allMonthsData) {
             // Loop Bulan (Contoh: April_2026, Mei_2026)
@@ -173,8 +168,6 @@ async function prosesRincian() {
                                     target.reflexy += parseFloat(item.detail_jam.reflexy || 0);
                                     target.massage += parseFloat(item.detail_jam.massage || 0);
                                 }
-                                
-                                jumlahHari++;
                             }
                         });
                     });
@@ -203,9 +196,6 @@ async function prosesRincian() {
         setTxt('rTotalReflexy', grandReflexy);
         setTxt('rTotalMassage', grandMassage);
         setTxt('rGrandTotal', grandTotal);
-        
-        // Update jumlah hari
-        document.getElementById('rJumlahHari').innerText = jumlahHari + " Hari";
 
         // Jalankan Animasi
         const resArea = document.getElementById('areaHasilRincian');
