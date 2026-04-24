@@ -10,7 +10,7 @@ function inisialisasiLogin() {
         loginOverlay.style.zIndex = '20000';
         
         const isDark = document.body.classList.contains('dark-theme');
-        const logoSrc = isDark ? '../../assets/fs2-white.png' : '../../assets/fs2-black.png';
+        const logoSrc = isDark ? 'assets/fs2-white.png' : 'assets/fs2-black.png';
         const inputStyle = "background: var(--bg-color); border: 2px solid transparent; padding: 16px; border-radius: 12px; width: 100%; box-sizing: border-box; outline: none; color: var(--text-primary); font-size: 15px; transition: 0.3s;";
 
         loginOverlay.innerHTML = `
