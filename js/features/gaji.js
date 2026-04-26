@@ -1,8 +1,7 @@
-// gaji.js - Modul Slip Gaji (UID Root Architecture & Async Logic)
+// gaji.js - Modul Slip Gaji (Firestore Parallel Architecture - Day Name Sync)
 
-const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+const namaBulanGaji = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-// KONFIGURASI TARIF (TETAP SAMA)
 const TARIF = {
     POKOK: 900000,
     REFLEXY: 20000, 
@@ -11,34 +10,20 @@ const TARIF = {
     BONUS_PER_JAM: 2888 
 };
 
-// CSS Animasi (TETAP SAMA)
+// 1. CSS ANIMASI (TETAP SAMA)
 if (!document.getElementById('gaji-result-style')) {
     const style = document.createElement('style');
     style.id = 'gaji-result-style';
     style.innerHTML = `
-        @keyframes staggeredFadeIn {
-            from { transform: translateY(10px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .data-item-animate {
-            opacity: 0;
-            animation: staggeredFadeIn 0.4s ease-out forwards;
-        }
-        #areaHasilGaji {
-            transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            display: block !important; 
-        }
-        #areaHasilGaji.show {
-            max-height: 1500px;
-            opacity: 1;
-        }
+        @keyframes staggeredFadeIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .data-item-animate { opacity: 0; animation: staggeredFadeIn 0.4s ease-out forwards; }
+        #areaHasilGaji { transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; max-height: 0; overflow: hidden; opacity: 0; display: block !important; }
+        #areaHasilGaji.show { max-height: 1500px; opacity: 1; }
     `;
     document.head.appendChild(style);
 }
 
+// 2. FUNGSI BUKA MODAL GAJI
 function bukaMenuGaji(event) {
     if(event) event.preventDefault();
     let modal = document.getElementById('gajiModal');
@@ -51,18 +36,13 @@ function bukaMenuGaji(event) {
         
         modal.innerHTML = `
             <div class="ios-modal-form profile-expand-anim" style="width: 350px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
-                <div class="ios-modal-header" style="flex-shrink: 0;">
-                    <h3>Slip Gaji</h3>
-                </div>
+                <div class="ios-modal-header" style="flex-shrink: 0;"><h3>Slip Gaji</h3></div>
                 <div class="ios-modal-body" style="padding: 0; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
                     <div style="padding: 15px 20px; flex-shrink: 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
-                        <div class="input-group">
-                            <label>Periode Gaji</label>
-                            <input type="text" id="inputPeriodeGaji" readonly 
-                                onclick="bukaPickerPeriodeGaji()" placeholder="Pilih Bulan & Tahun"
-                                style="cursor: pointer; font-weight: 600; text-align: center;">
+                        <div class="input-group"><label>Periode Gaji</label>
+                            <input type="text" id="inputPeriodeGaji" readonly onclick="bukaPickerPeriodeGaji()" placeholder="Pilih Bulan & Tahun" style="cursor: pointer; font-weight: 600; text-align: center;">
                         </div>
-                        <button id="btnHitungGaji" onclick="prosesGaji()" class="btn-simpan" style="margin-top:15px; width:100%; border:none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; font-weight: bold; border-radius: 12px; cursor: pointer; background-color: #007AFF !important; color: #FFFFFF !important;">
+                        <button id="btnHitungGaji" onclick="prosesGaji()" class="btn-simpan" style="margin-top:15px; width:100%; border:none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; font-weight: bold; border-radius: 12px; background-color: #007AFF !important; color: #FFFFFF !important;">
                             <i class="fa-solid fa-calculator"></i> Hitung Gaji
                         </button>
                     </div>
@@ -121,72 +101,93 @@ function bukaMenuGaji(event) {
                 <div class="ios-modal-footer-grid" style="grid-template-columns: 1fr;">
                     <button class="btn-batal" onclick="tutupMenuGaji()" style="color: #007AFF !important;">Tutup</button>
                 </div>
-            </div>
-        `;
+            </div>`;
         document.body.appendChild(modal);
     }
     
     const d = new Date();
-    document.getElementById('inputPeriodeGaji').value = namaBulan[d.getMonth()] + " " + d.getFullYear();
+    document.getElementById('inputPeriodeGaji').value = namaBulanGaji[d.getMonth()] + " " + d.getFullYear();
     document.getElementById('areaHasilGaji').classList.remove('show');
     modal.style.display = 'flex';
 }
 
-// LOGIKA UTAMA: Hitung Gaji dari folder UID > data > Bulan_Tahun
+// 3. LOGIKA UTAMA: FIRESTORE PARALLEL (SINKRON NAMA HARI)
 async function prosesGaji() {
     const periode = document.getElementById('inputPeriodeGaji').value;
     const btn = document.getElementById('btnHitungGaji');
     const userAuth = firebase.auth().currentUser;
 
-    if (!userAuth) return IOSAlert.show("Sesi Habis", "Silakan login kembali.");
-    if (!periode) return IOSAlert.show("Peringatan", "Pilih periode gaji!");
-
+    if (!userAuth) return;
     btn.innerText = "Menghitung...";
     btn.disabled = true;
 
-    // Persiapan ID Folder (Contoh: "April_2026")
     const p = periode.split(' ');
-    const blnTahunId = p[0] + "_" + p[1];
+    const blnNama = p[0];
+    const thnId = parseInt(p[1]);
+    const blnIndex = namaBulanGaji.indexOf(blnNama);
+    const blnTahunId = blnNama + "_" + thnId; // April_2026
+    const uid = userAuth.uid;
 
     let jamReflexy = 0, jamMassage = 0, hariMasuk = 0, valKasbon = 0, valPaket = 0;
 
     try {
-        // Ambil folder data bulan yang dipilih
-        const snapshot = await window.db.ref(`${userAuth.uid}/data/${blnTahunId}`).once('value');
-        const dataBulan = snapshot.val();
+        let listKerjaPromises = [];
+        let listKasbonPromises = [];
+        let listAbsenPromises = [];
 
-        if (dataBulan) {
-            // 1. HITUNG KERJA (Komisi & Bonus)
-            if (dataBulan.kerja) {
-                Object.values(dataBulan.kerja).forEach(dateGroup => {
-                    Object.values(dateGroup).forEach(item => {
-                        if (item.detail_jam) {
-                            jamReflexy += parseFloat(item.detail_jam.reflexy || 0);
-                            jamMassage += parseFloat(item.detail_jam.massage || 0);
-                        }
-                    });
-                });
-            }
+        const daysInMonth = new Date(thnId, blnIndex + 1, 0).getDate();
+        const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
 
-            // 2. HITUNG ABSEN (Uang Makan)
-            if (dataBulan.absen) {
-                Object.values(dataBulan.absen).forEach(item => {
-                    if (item.status === 'Masuk' || item.status === 'Telat') hariMasuk++;
-                });
-            }
+        // --- STEP A: Persiapkan Request Sinkron Format Nama Hari ---
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dObj = new Date(thnId, blnIndex, i);
+            const tglFullStr = dObj.toLocaleDateString('id-ID', opsi); // "Senin, 27 April 2026"
+            const dateId = tglFullStr.replace(', ', '_').replace(/\s/g, '_'); // "Senin_27_April_2026"
 
-            // 3. HITUNG KASBON (Potongan)
-            if (dataBulan.kasbon) {
-                Object.values(dataBulan.kasbon).forEach(dateGroup => {
-                    Object.values(dateGroup).forEach(item => {
-                        if (item.jenis === 'KANTOR') valKasbon += parseInt(item.jumlah);
-                        else valPaket += parseInt(item.jumlah);
-                    });
-                });
-            }
+            const baseRef = window.firestore.collection('data').doc(uid);
+            
+            listKerjaPromises.push(baseRef.collection('kerja').doc(blnTahunId).collection(dateId).get());
+            listKasbonPromises.push(baseRef.collection('kasbon').doc(blnTahunId).collection(dateId).get());
+            listAbsenPromises.push(baseRef.collection('absen').doc(blnTahunId).collection(dateId).doc('harian').get());
         }
 
-        // Kalkulasi Akhir (LOGIKA TETAP SAMA)
+        // --- STEP B: Eksekusi Parallel ---
+        const [allKerjaSnap, allKasbonSnap, allAbsenSnap] = await Promise.all([
+            Promise.all(listKerjaPromises),
+            Promise.all(listKasbonPromises),
+            Promise.all(listAbsenPromises)
+        ]);
+
+        // --- STEP C: Olah Kerja ---
+        allKerjaSnap.forEach(snap => {
+            snap.forEach(doc => {
+                const item = doc.data();
+                if (item.detail_jam) {
+                    jamReflexy += parseFloat(item.detail_jam.reflexy || 0);
+                    jamMassage += parseFloat(item.detail_jam.massage || 0);
+                }
+            });
+        });
+
+        // --- STEP D: Olah Kasbon ---
+        allKasbonSnap.forEach(snap => {
+            snap.forEach(doc => {
+                const item = doc.data();
+                const jml = parseInt(item.jumlah || 0);
+                if (item.jenis === 'KANTOR') valKasbon += jml;
+                else valPaket += jml;
+            });
+        });
+
+        // --- STEP E: Olah Absen (Hitung Uang Makan) ---
+        allAbsenSnap.forEach(doc => {
+            if (doc.exists) {
+                const item = doc.data();
+                if (item.status === 'Masuk' || item.status === 'Telat') hariMasuk++;
+            }
+        });
+
+        // --- STEP F: KALKULASI AKHIR ---
         const totalGjReflexy = jamReflexy * TARIF.REFLEXY;
         const totalGjMassage = jamMassage * TARIF.MASSAGE;
         const totalUangMakan = hariMasuk * TARIF.MAKAN;
@@ -197,13 +198,12 @@ async function prosesGaji() {
         const totalKeluar = valKasbon + valPaket;
         const grandTotal = totalKotor - totalKeluar;
 
-        // Update Keterangan Teks
+        // --- UPDATE UI ---
         document.getElementById('gjReflexyKet').innerText = jamReflexy.toFixed(1).replace('.0', '') + " Jam";
         document.getElementById('gjMassageKet').innerText = jamMassage.toFixed(1).replace('.0', '') + " Jam";
         document.getElementById('gjMakanKet').innerText = hariMasuk + " Hari";
         document.getElementById('gjBonusKet').innerText = totalJam.toFixed(1).replace('.0', '') + " Jam";
 
-        // Update Nilai Rupiah
         setNilaiGaji('gjPokok', TARIF.POKOK);
         setNilaiGaji('gjReflexy', totalGjReflexy);
         setNilaiGaji('gjMassage', totalGjMassage);
@@ -217,20 +217,18 @@ async function prosesGaji() {
 
         document.getElementById('gajiGrandTotal').innerText = new Intl.NumberFormat('id-ID').format(grandTotal);
 
-        // Tampilkan Hasil dengan Animasi
-        const resArea = document.getElementById('areaHasilGaji');
-        resArea.classList.remove('show');
-        setTimeout(() => { resArea.classList.add('show'); }, 50);
+        document.getElementById('areaHasilGaji').classList.add('show');
 
     } catch (e) {
-        IOSAlert.show("Gagal", "Terjadi kesalahan memuat data.");
         console.error(e);
+        IOSAlert.show("Gagal", "Kesalahan memproses gaji: " + e.message);
     } finally {
         btn.innerHTML = '<i class="fa-solid fa-calculator"></i> Hitung Gaji';
         btn.disabled = false;
     }
 }
 
+// --- FUNGSI HELPER UI ---
 const setNilaiGaji = (idRoot, angka) => {
     const rpEl = document.getElementById(idRoot + 'Rp');
     const valEl = document.getElementById(idRoot);
@@ -243,7 +241,7 @@ const setNilaiGaji = (idRoot, angka) => {
     }
 };
 
-// --- PICKER PERIODE (TETAP SAMA SEPERTI ASLINYA) ---
+// --- LOGIKA PICKER PERIODE ---
 let tempPeriodeDateGaji = new Date();
 
 function bukaPickerPeriodeGaji() {
@@ -273,16 +271,29 @@ function renderPickerMYGajiInner(withAnim = false) {
                 <button class="btn-icon-edit" onclick="ubahThnGaji(1)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
             <div class="grid-picker">
-                ${namaBulan.map((b, i) => `
-                    <div class="grid-item ${blnAktif === i ? 'active' : ''}" 
-                         onclick="setBlnGaji(${i})" style="padding: 12px 0;">${b.substring(0,3)}</div>
-                `).join('')}
+                ${namaBulanGaji.map((b, i) => `<div class="grid-item ${blnAktif === i ? 'active' : ''}" onclick="setBlnGaji(${i})" style="padding: 12px 0;">${b.substring(0,3)}</div>`).join('')}
             </div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn-text-batal" onclick="document.getElementById('pickerMYGaji').style.display='none'">BATAL</button>
-            </div>
-        </div>
-    `;
+            <div style="text-align: center; margin-top: 20px;"><button class="btn-text-batal" onclick="document.getElementById('pickerMYGaji').style.display='none'">BATAL</button></div>
+        </div>`;
+}
+
+function setBlnGaji(i) {
+    tempPeriodeDateGaji.setMonth(i);
+    document.getElementById('inputPeriodeGaji').value = namaBulanGaji[i] + " " + tempPeriodeDateGaji.getFullYear();
+    document.getElementById('pickerMYGaji').style.display = 'none';
+    const resArea = document.getElementById('areaHasilGaji');
+    if(resArea) resArea.classList.remove('show');
+}
+
+function ubahThnGaji(v, isYearOnly = false) {
+    tempPeriodeDateGaji.setFullYear(tempPeriodeDateGaji.getFullYear() + v);
+    if(isYearOnly) renderYearPickerGajiInner(false); else renderPickerMYGajiInner(false);
+}
+
+function setThnGaji(y) {
+    tempPeriodeDateGaji.setFullYear(y);
+    if(document.getElementById('pickerYearOnlyGaji')) document.getElementById('pickerYearOnlyGaji').style.display = 'none';
+    renderPickerMYGajiInner(false);
 }
 
 function bukaYearPickerGaji() {
@@ -303,45 +314,19 @@ function renderYearPickerGajiInner(withAnim = false) {
     const endY = startY + 11;
     let yearHtml = '';
     const animStyle = withAnim ? '' : 'animation: none !important; transition: none !important;';
-
     for (let y = startY; y <= endY; y++) {
         yearHtml += `<div class="grid-item ${y === tempPeriodeDateGaji.getFullYear() ? 'active' : ''}" onclick="setThnGaji(${y})" style="padding: 12px 0;">${y}</div>`;
     }
-
     document.getElementById('pickerYearOnlyGaji').innerHTML = `
         <div class="ios-modal-form profile-expand-anim" style="width: 300px; padding: 20px; ${animStyle}">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <button class="btn-icon-edit" onclick="ubahThnGaji(-12, true)"><i class="fa-solid fa-chevron-left"></i></button>
-                <h2 style="margin:0; font-size: 18px;"> < ${startY} - ${endY} > </h2>
+                <h2 style="margin:0; font-size: 18px;">Pilih Tahun</h2>
                 <button class="btn-icon-edit" onclick="ubahThnGaji(12, true)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
             <div class="grid-picker">${yearHtml}</div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn-text-batal" onclick="document.getElementById('pickerYearOnlyGaji').style.display='none'">BATAL</button>
-            </div>
-        </div>
-    `;
+            <div style="text-align: center; margin-top: 20px;"><button class="btn-text-batal" onclick="document.getElementById('pickerYearOnlyGaji').style.display='none'">BATAL</button></div>
+        </div>`;
 }
 
-function ubahThnGaji(v, isYearOnly = false) {
-    tempPeriodeDateGaji.setFullYear(tempPeriodeDateGaji.getFullYear() + v);
-    if(isYearOnly) renderYearPickerGajiInner(false);
-    else renderPickerMYGajiInner(false);
-}
-
-function setThnGaji(y) {
-    tempPeriodeDateGaji.setFullYear(y);
-    document.getElementById('pickerYearOnlyGaji').style.display = 'none';
-    renderPickerMYGajiInner(false);
-}
-
-function setBlnGaji(i) {
-    tempPeriodeDateGaji.setMonth(i);
-    document.getElementById('inputPeriodeGaji').value = namaBulan[i] + " " + tempPeriodeDateGaji.getFullYear();
-    document.getElementById('pickerMYGaji').style.display = 'none';
-    prosesGaji(); // Auto-hitung setelah pilih bulan
-}
-
-function tutupMenuGaji() {
-    document.getElementById('gajiModal').style.display = 'none';
-}
+function tutupMenuGaji() { document.getElementById('gajiModal').style.display = 'none'; }

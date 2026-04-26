@@ -1,8 +1,8 @@
-// rincian.js - Modul Laporan Rincian Jam Kerja (UID Root Architecture & Async Logic)
+// rincian.js - Modul Laporan Rincian Jam Kerja (Firestore Parallel Architecture - Day Name Sync)
 
-let isRincianProcessing = false;
+window.bulanIndo = window.bulanIndo || ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-// CSS Khusus Animasi
+// 1. CSS KHUSUS ANIMASI (TETAP SAMA)
 if (!document.getElementById('rincian-animation-style')) {
     const style = document.createElement('style');
     style.id = 'rincian-animation-style';
@@ -11,25 +11,17 @@ if (!document.getElementById('rincian-animation-style')) {
             from { transform: translateY(10px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
-        .rincian-item-animate {
-            opacity: 0;
-            animation: staggeredFadeIn 0.4s ease-out forwards;
-        }
+        .rincian-item-animate { opacity: 0; animation: staggeredFadeIn 0.4s ease-out forwards; }
         #areaHasilRincian {
             transition: max-height 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            display: block !important; 
+            max-height: 0; overflow: hidden; opacity: 0; display: block !important; 
         }
-        #areaHasilRincian.show {
-            max-height: 2000px;
-            opacity: 1;
-        }
+        #areaHasilRincian.show { max-height: 2000px; opacity: 1; }
     `;
     document.head.appendChild(style);
 }
 
+// 2. MODAL UTAMA
 function bukaMenuRincian(event) {
     if(event) event.preventDefault();
     let modal = document.getElementById('rincianModal');
@@ -51,13 +43,13 @@ function bukaMenuRincian(event) {
                             <div class="input-group">
                                 <label>Dari Tanggal</label>
                                 <input type="text" id="inputRincianDari" readonly 
-                                    onclick="bukaKalenderVisual('inputRincianDari')" placeholder="Pilih Tanggal Awal"
+                                    onclick="if(typeof bukaKalenderVisual === 'function') bukaKalenderVisual('inputRincianDari')" placeholder="Pilih Tanggal Awal"
                                     style="cursor: pointer; font-weight: 600; text-align: center;">
                             </div>
                             <div class="input-group">
                                 <label>Sampai Tanggal</label>
                                 <input type="text" id="inputRincianSampai" readonly 
-                                    onclick="bukaKalenderVisual('inputRincianSampai')" placeholder="Pilih Tanggal Akhir"
+                                    onclick="if(typeof bukaKalenderVisual === 'function') bukaKalenderVisual('inputRincianSampai')" placeholder="Pilih Tanggal Akhir"
                                     style="cursor: pointer; font-weight: 600; text-align: center;">
                             </div>
                         </div>
@@ -67,7 +59,6 @@ function bukaMenuRincian(event) {
                     </div>
 
                     <div id="areaHasilRincian" style="padding: 0 20px 20px 20px; overflow-y: auto; flex-grow: 1; text-align: left;">
-                        
                         <h4 class="rincian-item-animate" style="margin: 20px 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase; animation-delay: 0.1s;">FIVE STAR 1</h4>
                         <div class="data-grid rincian-item-animate" style="margin-bottom: 16px; animation-delay: 0.15s;">
                             <div class="data-item"><span>Reflexy</span><p id="rPusatReflexy">0 Jam</p></div>
@@ -107,16 +98,21 @@ function bukaMenuRincian(event) {
         document.body.appendChild(modal);
     }
     
-    // Set default awal bulan sampai hari ini
     const d = new Date();
-    document.getElementById('inputRincianDari').value = "1 " + bulanIndo[d.getMonth()] + " " + d.getFullYear();
-    document.getElementById('inputRincianSampai').value = getTanggalHariIni();
+    const tglSatu = new Date(d.getFullYear(), d.getMonth(), 1);
+    const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    
+    document.getElementById('inputRincianDari').value = tglSatu.toLocaleDateString('id-ID', opsi);
+
+    if(typeof getTanggalHariIni === 'function') {
+        document.getElementById('inputRincianSampai').value = getTanggalHariIni();
+    }
 
     document.getElementById('areaHasilRincian').classList.remove('show');
     modal.style.display = 'flex';
 }
 
-// LOGIKA UTAMA: Menelusuri jalur UID > data > Bulan_Tahun > kerja
+// 3. LOGIKA UTAMA: FIRESTORE PARALLEL FETCHING
 async function prosesRincian() {
     const tglDariStr = document.getElementById('inputRincianDari').value;
     const tglSampaiStr = document.getElementById('inputRincianSampai').value;
@@ -124,66 +120,85 @@ async function prosesRincian() {
     const userAuth = firebase.auth().currentUser;
 
     if (!userAuth) return IOSAlert.show("Sesi Habis", "Silakan login kembali.");
-    if (!tglDariStr || !tglSampaiStr) {
-        return IOSAlert.show("Input Kosong", "Pilih rentang tanggal.");
-    }
+    if (!tglDariStr || !tglSampaiStr) return IOSAlert.show("Input Kosong", "Pilih rentang tanggal.");
 
-    btn.innerText = "Menghitung...";
+    btn.innerText = "Mencari Data...";
     btn.disabled = true;
 
+    // Helper Parse Tanggal (SINKRON DENGAN FORMAT NAMA HARI)
     const parseIndo = (str) => {
-        const p = str.split(" ");
-        return new Date(parseInt(p[2]), bulanIndo.indexOf(p[1]), parseInt(p[0]));
+        // "Minggu, 26 April 2026" -> split(", ") -> ["Minggu", "26 April 2026"]
+        const cleanStr = str.includes(', ') ? str.split(', ')[1] : str;
+        const p = cleanStr.split(" ");
+        return new Date(parseInt(p[2]), window.bulanIndo.indexOf(p[1]), parseInt(p[0]));
     };
 
     const dDari = parseIndo(tglDariStr);
     const dSampai = parseIndo(tglSampaiStr);
+    const uid = userAuth.uid;
+
+    let rekap = {
+        fs1: { reflexy: 0, massage: 0 },
+        fs2: { reflexy: 0, massage: 0 }
+    };
 
     try {
-        // Ambil data dari seluruh folder 'data' milik UID
-        const snapshot = await window.db.ref(`${userAuth.uid}/data`).once('value');
-        const allMonthsData = snapshot.val();
-        
-        let rekap = {
-            fs1: { reflexy: 0, massage: 0 },
-            fs2: { reflexy: 0, massage: 0 }
-        };
+        let listPromises = [];
+        let tglLoop = new Date(dDari);
+        const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
 
-        if (allMonthsData) {
-            // Loop Bulan (Contoh: April_2026, Mei_2026)
-            Object.values(allMonthsData).forEach(monthFolder => {
-                if (monthFolder.kerja) {
-                    // Loop Tanggal di dalam folder kerja (Contoh: 23_April_2026)
-                    Object.values(monthFolder.kerja).forEach(dateFolder => {
-                        // Loop Entry Kerja (Push ID)
-                        Object.values(dateFolder).forEach(item => {
-                            const tglItem = parseIndo(item.tanggal);
-                            
-                            // Filter berdasarkan rentang tanggal
-                            if (tglItem >= dDari && tglItem <= dSampai) {
-                                const kantor = item.kantor;
-                                const target = (kantor === 'FIVE STAR 1') ? rekap.fs1 : rekap.fs2;
+        // --- STEP A: Kumpulkan Semua Request (SINKRON DENGAN PATH BARU) ---
+        while (tglLoop <= dSampai) {
+            // Generate String Format Baru: "Minggu, 26 April 2026"
+            const tglFullStr = tglLoop.toLocaleDateString('id-ID', opsi);
+            
+            // Generate Path (Sinkron dengan simpanDataKerja)
+            const temp = tglFullStr.split(', ');
+            const tglMurni = temp[1];
+            const p = tglMurni.split(" ");
+            
+            const blnTahunId = p[1] + "_" + p[2]; // April_2026
+            const dateId = tglFullStr.replace(', ', '_').replace(/\s/g, '_'); // Minggu_26_April_2026
 
-                                if (item.detail_jam) {
-                                    target.reflexy += parseFloat(item.detail_jam.reflexy || 0);
-                                    target.massage += parseFloat(item.detail_jam.massage || 0);
-                                }
-                            }
-                        });
-                    });
-                }
-            });
+            // Jalur: data -> [UID] -> kerja -> [Bulan] -> [Tanggal_Hari]
+            const prom = window.firestore
+                .collection('data').doc(uid)
+                .collection('kerja').doc(blnTahunId)
+                .collection(dateId).get();
+            
+            listPromises.push(prom);
+            tglLoop.setDate(tglLoop.getDate() + 1);
         }
 
-        // Hitung Hasil Akhir
+        const allSnapshots = await Promise.all(listPromises);
+
+        allSnapshots.forEach(snap => {
+            if (!snap.empty) {
+                snap.forEach(doc => {
+                    const item = doc.data();
+                    // Gunakan trim() agar perbandingan kantor lebih akurat
+                    const namaKantor = item.kantor ? item.kantor.trim() : "";
+                    const target = (namaKantor === 'FIVE STAR 1') ? rekap.fs1 : rekap.fs2;
+
+                    if (item.detail_jam) {
+                        target.reflexy += parseFloat(item.detail_jam.reflexy || 0);
+                        target.massage += parseFloat(item.detail_jam.massage || 0);
+                    }
+                });
+            }
+        });
+
+        // --- STEP D: Kalkulasi Akhir ---
         const fs1Total = rekap.fs1.reflexy + rekap.fs1.massage;
         const fs2Total = rekap.fs2.reflexy + rekap.fs2.massage;
         const grandReflexy = rekap.fs1.reflexy + rekap.fs2.reflexy;
         const grandMassage = rekap.fs1.massage + rekap.fs2.massage;
         const grandTotal = fs1Total + fs2Total;
 
-        // Update UI
-        const setTxt = (id, val) => document.getElementById(id).innerText = val.toFixed(1).replace('.0', '') + " Jam";
+        const setTxt = (id, val) => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = val.toFixed(1).replace('.0', '') + " Jam";
+        };
         
         setTxt('rPusatReflexy', rekap.fs1.reflexy);
         setTxt('rPusatMassage', rekap.fs1.massage);
@@ -195,16 +210,19 @@ async function prosesRincian() {
         
         setTxt('rTotalReflexy', grandReflexy);
         setTxt('rTotalMassage', grandMassage);
-        setTxt('rGrandTotal', grandTotal);
+        
+        const elGrand = document.getElementById('rGrandTotal');
+        if(elGrand) elGrand.innerText = grandTotal.toFixed(1).replace('.0', '') + " Jam";
 
-        // Jalankan Animasi
         const resArea = document.getElementById('areaHasilRincian');
-        resArea.classList.remove('show');
-        setTimeout(() => { resArea.classList.add('show'); }, 50);
+        if(resArea) {
+            resArea.classList.remove('show');
+            setTimeout(() => { resArea.classList.add('show'); }, 50);
+        }
 
     } catch (e) {
-        IOSAlert.show("Gagal", "Terjadi kesalahan saat memuat data.");
         console.error(e);
+        IOSAlert.show("Gagal", "Kesalahan memuat rincian: " + e.message);
     } finally {
         btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Tampilkan Rekap';
         btn.disabled = false;

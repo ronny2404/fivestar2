@@ -1,4 +1,4 @@
-// kasbon.js - Modul Kasbon (UID Root Architecture & Premium iOS Style)
+// kasbon.js - Modul Kasbon (Firestore Architecture & Timestamp ID)
 
 function bukaMenuKasbon(event) {
     if(event) event.preventDefault();
@@ -71,11 +71,11 @@ function tutupPopupKasbon() {
     if (modal) modal.style.display = 'none';
 }
 
-// --- LOGIKA SIMPAN (STRUKTUR: UID / data / Bulan_Tahun / kasbon / ID_Tanggal / [Push ID]) ---
-function simpanDataKasbon() {
+// --- LOGIKA SIMPAN (FIRESTORE + TIMESTAMP ID) ---
+async function simpanDataKasbon() {
     const jenis = document.getElementById('jenisKasbon').value;
     const jumlah = document.getElementById('jumlahKasbon').value;
-    const tgl = document.getElementById('tglKasbon').value; // Contoh: "23 April 2026"
+    const tglFull = document.getElementById('tglKasbon').value; // Contoh: "Minggu, 26 April 2026"
     const ket = document.getElementById('ketKasbon').value;
 
     const userAuth = firebase.auth().currentUser;
@@ -83,50 +83,76 @@ function simpanDataKasbon() {
 
     // Validasi input
     if (!jenis) {
-        IOSAlert.show("Pilihan Kosong", "Silakan pilih Jenis Kasbon (Kantor/Paket).", { teksTombol: "Oke" });
+        IOSAlert.show("Pilihan Kosong", "Silakan pilih Jenis Kasbon (Kantor/Paket).");
         return;
     }
     if (!jumlah || jumlah <= 0) {
-        IOSAlert.show("Nominal Salah", "Harap isi jumlah kasbon dengan benar.", { teksTombol: "Oke" });
+        IOSAlert.show("Nominal Salah", "Harap isi jumlah kasbon dengan benar.");
         return;
     }
 
     const uid = userAuth.uid;
-    const parts = tgl.split(" "); // ["23", "April", "2026"]
-    const blnTahunId = parts[1] + "_" + parts[2]; // "April_2026"
-    const dateId = tgl.replace(/\s/g, '_'); // "23_April_2026"
+
+    // --- 1. LOGIKA PATH FIRESTORE (DOKUMEN=BULAN, KOLEKSI=HARI) ---
+    // Pecah untuk mengambil Bulan_Tahun saja untuk nama DOCUMENT
+    const tempArr = tglFull.split(', '); 
+    const tglMurni = tempArr[1] || tempArr[0]; // Ambil "26 April 2026"
+    const parts = tglMurni.split(" ");
+    const blnTahunId = parts[1] + "_" + parts[2]; // Hasil: "April_2026"
+
+    // Buat ID Koleksi dengan format: "Minggu_26_April_2026"
+    const dateId = tglFull.replace(', ', '_').replace(/\s/g, '_');
+
+    // --- 2. PEMBUATAN ID UNIK BERBASIS TIMESTAMP ---
+    const customID = `FS2${Date.now()}`;
+
+    // Bersihkan jumlah dari karakter non-angka jika ada
+    const nominalBersih = parseInt(String(jumlah).replace(/[^0-9]/g, ''));
 
     const dataKasbon = {
-        tanggal: tgl,
+        id_kasbon: customID,
+        tanggal: tglFull,
         jenis: jenis,
-        jumlah: parseInt(jumlah),
+        jumlah: nominalBersih,
         keterangan: ket,
-        waktu_input: new Date().toLocaleTimeString()
+        waktu_input: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    if (window.db) {
-        // JALUR BARU: UID / data / Bulan_Tahun / kasbon / ID_TANGGAL
-        // Menggunakan .push() karena satu hari bisa kasbon berkali-kali (Kantor & Paket)
-        const path = `${uid}/data/${blnTahunId}/kasbon/${dateId}`;
-        
-        window.db.ref(path).push(dataKasbon)
-        .then(() => {
-            IOSAlert.show("Berhasil", "Kasbon Rp " + parseInt(jumlah).toLocaleString() + " tersimpan!", {
+    if (window.firestore) {
+        // Struktur Jalur: data > UID > kasbon > April_2026 > Minggu_26_April_2026 > customID
+        const docRef = window.firestore
+            .collection('data').doc(uid)
+            .collection('kasbon').doc(blnTahunId) // Folder Bulan
+            .collection(dateId).doc(customID);   // Folder Hari & Data unik
+
+        try {
+            await docRef.set(dataKasbon);
+            
+            IOSAlert.show("Berhasil", "Kasbon Rp " + nominalBersih.toLocaleString() + " tersimpan!", {
                 teksTombol: "Mantap",
                 onConfirm: () => {
-                    resetFormKasbon();
-                    tutupPopupKasbon();
+                    if (typeof resetFormKasbon === 'function') resetFormKasbon();
+                    if (typeof tutupPopupKasbon === 'function') tutupPopupKasbon();
                 }
             });
-        })
-        .catch(e => IOSAlert.show("Gagal", e.message));
+        } catch (e) {
+            console.error(e);
+            IOSAlert.show("Gagal", "Error Firestore: " + e.message);
+        }
+    } else {
+        IOSAlert.show("Error", "Sistem Database belum siap.");
     }
 }
 
 function resetFormKasbon() {
-    document.getElementById('jumlahKasbon').value = '';
-    document.getElementById('ketKasbon').value = '';
-    document.getElementById('jenisKasbon').value = '';
+    const inputJml = document.getElementById('jumlahKasbon');
+    const inputKet = document.getElementById('ketKasbon');
+    const inputJenis = document.getElementById('jenisKasbon');
+    
+    if(inputJml) inputJml.value = '';
+    if(inputKet) inputKet.value = '';
+    if(inputJenis) inputJenis.value = '';
+    
     const items = document.querySelectorAll('#kasbonIosModal .grid-item');
     items.forEach(item => item.classList.remove('active'));
 }

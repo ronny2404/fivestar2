@@ -73,7 +73,7 @@ function bukaMenuKerja(event) {
     }
     
     const tglHariIni = typeof getTanggalHariIni === 'function' ? getTanggalHariIni() : "";
-    document.getElementById('tglKerja').value = localStorage.getItem('last_kerja_tgl') || tglHariIni;
+    document.getElementById('tglKerja').value = getTanggalHariIni();
     
     modal.style.display = 'flex';
     applyLastChoiceKerja(); 
@@ -119,11 +119,11 @@ function pilihGridKerja(elemen, kategori, nilai) {
 }
 
 // --- LOGIKA SIMPAN (STRUKTUR: UID / data / Bulan_Tahun / kerja / tanggal / [Push ID]) ---
-function simpanDataKerja() {
+async function simpanDataKerja() {
     const treatment = document.getElementById('jenisTreatment').value;
     const durasi = document.getElementById('durasiJam').value;
     const kantor = document.getElementById('lokasiKantor').value;
-    const tanggal = document.getElementById('tglKerja').value; 
+    const tanggalFull = document.getElementById('tglKerja').value; // Contoh: "Minggu, 26 April 2026"
 
     const userAuth = firebase.auth().currentUser;
     if (!userAuth) return IOSAlert.show("Sesi Habis", "Silakan login kembali.");
@@ -133,49 +133,71 @@ function simpanDataKerja() {
     }
 
     const uid = userAuth.uid;
-    const parts = tanggal.split(" "); // ["23", "April", "2026"]
-    const blnTahunId = parts[1] + "_" + parts[2]; // "April_2026"
-    const dateId = tanggal.replace(/\s/g, '_'); // "23_April_2026"
 
-    localStorage.setItem('last_kerja_tgl', tanggal);
+    // --- 1. ID UNIK (BERDASARKAN TIMESTAMP) ---
+    const kodeKntr = kantor === "FIVE STAR 1" ? "FS1" : "FS2";
+    const customID = `${kodeKntr}${Date.now()}`;
+
+    // --- 2. LOGIKA PATH FIRESTORE (DOKUMEN=BULAN, KOLEKSI=HARI) ---
+    // Pecah untuk mengambil Bulan_Tahun saja untuk nama DOCUMENT
+    const tempArr = tanggalFull.split(', '); 
+    const tglMurni = tempArr[1] || tempArr[0]; // Ambil "26 April 2026"
+    const parts = tglMurni.split(" ");
+    
+    const blnTahunId = parts[1] + "_" + parts[2]; // Hasil: "April_2026"
+
+    // Buat ID Koleksi dengan format: "Minggu_26_April_2026"
+    // Kita ganti koma dan spasi menjadi underscore (_)
+    const dateId = tanggalFull.replace(', ', '_').replace(/\s/g, '_');
+
+    localStorage.setItem('last_kerja_tgl', tanggalFull);
     localStorage.setItem('last_kerja_kantor', kantor);
 
     let data = {
-        tanggal: tanggal,
+        id_transaksi: customID,
+        tanggal: tanggalFull,
         kantor: kantor,
         treatment: treatment,
-        durasi: durasi,
+        durasi: parseFloat(durasi),
         keterangan: document.getElementById('ketKerja').value,
-        waktu_input: new Date().toLocaleTimeString(),
+        waktu_input: firebase.firestore.FieldValue.serverTimestamp(), 
         detail_jam: { massage: 0, reflexy: 0 }
     };
 
-    // LOGIKA HITUNG JAM (DIPERTAHANKAN)
-    const d = parseFloat(durasi);
+    // --- 3. LOGIKA HITUNG JAM (TETAP SAMA) ---
+    const durasiNum = parseFloat(durasi);
     if (treatment === 'KOMBINASI') {
-        if (d === 1) { data.detail_jam.massage = 0.5; data.detail_jam.reflexy = 0.5; }
-        else if (d === 1.5) { data.detail_jam.massage = 1.0; data.detail_jam.reflexy = 0.5; }
-        else if (d === 2) { data.detail_jam.massage = 1.0; data.detail_jam.reflexy = 1.0; }
-        else { data.detail_jam.massage = d / 2; data.detail_jam.reflexy = d / 2; }
+        if (durasiNum === 1) { data.detail_jam.massage = 0.5; data.detail_jam.reflexy = 0.5; }
+        else if (durasiNum === 1.5) { data.detail_jam.massage = 1.0; data.detail_jam.reflexy = 0.5; }
+        else if (durasiNum === 2) { data.detail_jam.massage = 1.0; data.detail_jam.reflexy = 1.0; }
+        else { data.detail_jam.massage = durasiNum / 2; data.detail_jam.reflexy = durasiNum / 2; }
     } else if (treatment === 'MASSAGE') {
-        data.detail_jam.massage = d;
+        data.detail_jam.massage = durasiNum;
     } else {
-        data.detail_jam.reflexy = d;
+        data.detail_jam.reflexy = durasiNum;
     }
 
-    if (window.db) {
-        // JALUR SESUAI PERMINTAAN: UID / data / Bulan_Tahun / kerja / ID_TANGGAL
-        // Kita gunakan .push() agar satu hari bisa menampung banyak data kerja (karena ini treatment)
-        const path = `${uid}/data/${blnTahunId}/kerja/${dateId}`;
-        
-        window.db.ref(path).push(data)
-        .then(() => {
-            IOSAlert.show("Berhasil", "Laporan kerja hari ini tersimpan!", {
+    // --- 4. EKSEKUSI KE FIRESTORE ---
+    if (window.firestore) {
+        // Struktur Jalur: data > UID > kerja > April_2026 > Minggu_26_April_2026 > ID_TRANS
+        const docRef = window.firestore
+            .collection('data').doc(uid)
+            .collection('kerja').doc(blnTahunId) // Folder Bulan
+            .collection(dateId).doc(customID);   // Folder Hari & Data
+
+        try {
+            await docRef.set(data);
+            IOSAlert.show("Berhasil", "Laporan kerja tersimpan! ID: " + customID, {
                 teksTombol: "Mantap",
-                onConfirm: () => resetFormSetelahSimpanKerja()
+                onConfirm: () => {
+                    if (typeof resetFormSetelahSimpanKerja === 'function') {
+                        resetFormSetelahSimpanKerja();
+                    }
+                }
             });
-        })
-        .catch(e => IOSAlert.show("Gagal", e.message));
+        } catch (e) {
+            IOSAlert.show("Gagal", "Firestore Error: " + e.message);
+        }
     }
 }
 
