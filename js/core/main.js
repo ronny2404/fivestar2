@@ -18,10 +18,24 @@ let currentDate = new Date();
 let targetInputId = "";
 const bulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
+// Ganti atau tambahkan di main.js
 function getTanggalHariIni() {
     const d = new Date();
-    return `${d.getDate()} ${bulanIndo[d.getMonth()]} ${d.getFullYear()}`;
+    const opsi = { 
+        weekday: 'long', // Menampilkan nama hari (Senin, Selasa, dst)
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+    };
+    return d.toLocaleDateString('id-ID', opsi);
 }
+
+// Helper untuk merubah tanggal objek apapun ke format lengkap
+function formatKeTanggalLengkap(dateObj) {
+    const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    return dateObj.toLocaleDateString('id-ID', opsi);
+}
+
 
 // ==========================================
 // PREMIUM VISUAL KALENDER GLOBAL (Untuk kerja.js, Rincian, dll)
@@ -94,20 +108,27 @@ function renderKalenderVisual() {
     const daysInMonth = new Date(thn, bln + 1, 0).getDate();
 
     let targetVal = document.getElementById(targetInputId)?.value || "";
-    const todayStr = getTanggalHariIni();
+    // todayStr sekarang berisi: "Senin, 27 April 2026"
+    const todayStr = getTanggalHariIni(); 
 
     for (let i = 0; i < firstDay; i++) {
         grid.innerHTML += `<div style="width:38px;"></div>`;
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
-        const tglStr = d + " " + bulanIndo[bln] + " " + thn;
+        // --- PERBAIKAN: Buat format yang sama dengan todayStr ---
+        const tempDate = new Date(thn, bln, d);
+        const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        const tglFullStr = tempDate.toLocaleDateString('id-ID', opsi); 
+
         const dayOfWeek = (firstDay + d - 1) % 7;
         
         let classes = "tgl-item-global";
         if (dayOfWeek === 0) classes += " minggu"; 
-        if (tglStr === todayStr) classes += " today"; 
-        if (tglStr === targetVal) classes += " selected"; 
+        
+        // Bandingkan format yang sudah sama-sama lengkap
+        if (tglFullStr === todayStr) classes += " today"; 
+        if (tglFullStr === targetVal) classes += " selected"; 
 
         grid.innerHTML += `<div class="${classes}" onclick="pilihTanggal(${d}, ${bln}, ${thn})">${d}</div>`;
     }
@@ -116,7 +137,15 @@ function renderKalenderVisual() {
 function pilihTanggal(d, bln, thn) {
     const input = document.getElementById(targetInputId);
     if (input) {
-        input.value = d + " " + bulanIndo[bln] + " " + thn;
+        // Buat objek tanggal dari pilihan user
+        const dateObj = new Date(thn, bln, d);
+        
+        // Gunakan format lengkap (Hari, Tanggal Bulan Tahun)
+        const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        const tglCantik = dateObj.toLocaleDateString('id-ID', opsi);
+        
+        input.value = tglCantik; // Hasil: Minggu, 26 April 2026
+        
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
     }

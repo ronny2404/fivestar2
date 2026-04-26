@@ -11,14 +11,26 @@ const firebaseConfig = {
   measurementId: "G-Y71EN3MHVW"
 };
 
-// Pastikan Firebase belum diinisialisasi sebelumnya untuk mencegah error
+// 1. Inisialisasi Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// Jadikan variabel global agar bisa dipanggil di login.js, storage.js, register.js, dan main.js
-// Menggunakan .database() untuk Realtime Database, BUKAN .firestore()
-window.db = firebase.database();
-window.auth = firebase.auth();
+// 2. Daftarkan Layanan ke Window (Gunakan Pengecekan Aman)
+try {
+    window.auth = firebase.auth();
+    window.db = firebase.database(); // Realtime Database
+    
+    // Cek apakah SDK Firestore sudah dimuat di HTML
+    if (typeof firebase.firestore === "function") {
+        window.firestore = firebase.firestore();
+        console.log("Firestore Berhasil Dimuat! 🚀");
+    } else {
+        console.error("SDK Firestore belum dipanggil di HTML!");
+    }
 
-console.log("Firebase Realtime Database & Auth berhasil terhubung! 🔥");
+} catch (error) {
+    console.error("Gagal inisialisasi layanan Firebase:", error);
+}
+
+console.log("Firebase System Ready! 🔥");
