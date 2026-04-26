@@ -1,4 +1,4 @@
-// gaji.js - Modul Slip Gaji (Firestore Parallel Architecture - Day Name Sync)
+// gaji.js - Modul Slip Gaji (Firestore Parallel Architecture - FS1 & FS2 Split)
 
 const namaBulanGaji = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
@@ -7,10 +7,16 @@ const TARIF = {
     REFLEXY: 20000, 
     MASSAGE: 21000, 
     MAKAN: 20000,   
-    BONUS_PER_JAM: 2888 
+    BONUS_PER_JAM: 2888,
+    
+    // Nominal Potongan Lainnya (Silakan disesuaikan)
+    POTONGAN_ALPA: 100000, 
+    POTONGAN_SAKIT: 0,
+    POTONGAN_TELAT: 0
+    // POTONGAN_IZIN dihitung prorata otomatis
 };
 
-// 1. CSS ANIMASI (TETAP SAMA)
+// 1. CSS ANIMASI
 if (!document.getElementById('gaji-result-style')) {
     const style = document.createElement('style');
     style.id = 'gaji-result-style';
@@ -18,7 +24,7 @@ if (!document.getElementById('gaji-result-style')) {
         @keyframes staggeredFadeIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .data-item-animate { opacity: 0; animation: staggeredFadeIn 0.4s ease-out forwards; }
         #areaHasilGaji { transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; max-height: 0; overflow: hidden; opacity: 0; display: block !important; }
-        #areaHasilGaji.show { max-height: 1500px; opacity: 1; }
+        #areaHasilGaji.show { max-height: 2500px; opacity: 1; }
     `;
     document.head.appendChild(style);
 }
@@ -48,54 +54,105 @@ function bukaMenuGaji(event) {
                     </div>
 
                     <div id="areaHasilGaji" style="padding: 0 20px 20px 20px; overflow-y: auto; flex-grow: 1; text-align: left;">
-                        <h4 style="margin: 20px 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase;">Pendapatan</h4>
+                        
+                        <h4 style="margin: 20px 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase;">Pendapatan Five Star 1</h4>
                         <div class="data-grid" style="margin-bottom: 16px;">
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.1s;">
+                                <div style="display:flex; flex-direction:column;"><span>Reflexy FS 1</span><span style="font-size:11px; color:#8E8E93;" id="gjReflexyKetFS1">0 Jam</span></div>
+                                <span id="gjReflexyFS1Rp">Rp</span><span id="gjReflexyFS1" style="font-weight: 600; text-align: right;">0</span>
+                            </div>
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.15s;">
+                                <div style="display:flex; flex-direction:column;"><span>Massage FS 1</span><span style="font-size:11px; color:#8E8E93;" id="gjMassageKetFS1">0 Jam</span></div>
+                                <span id="gjMassageFS1Rp">Rp</span><span id="gjMassageFS1" style="font-weight: 600; text-align: right;">0</span>
+                            </div>
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; border: 1px solid rgba(0, 122, 255, 0.2); background: rgba(0, 122, 255, 0.05); margin-top: 2px; animation-delay: 0.2s;">
+                                <span style="color: #007AFF; font-weight: 600;">Total Gaji FS 1</span>
+                                <span style="color: #007AFF; font-weight: 700;">Rp</span><span id="gajiTotalFS1" style="color: #007AFF; font-weight: 700; text-align: right;">0</span>
+                            </div>
+                        </div>
+
+                        <h4 style="margin: 10px 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase;">Pendapatan Five Star 2</h4>
+                        <div class="data-grid" style="margin-bottom: 16px;">
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.25s;">
                                 <div style="display:flex; flex-direction:column;"><span>Gaji Pokok</span><span style="font-size:11px; color:#8E8E93;">Tetap</span></div>
                                 <span id="gjPokokRp">Rp</span><span id="gjPokok" style="font-weight: 600; text-align: right;">0</span>
                             </div>
-                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.15s;">
-                                <div style="display:flex; flex-direction:column;"><span>Reflexy</span><span style="font-size:11px; color:#8E8E93;" id="gjReflexyKet">0 Jam</span></div>
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.3s;">
+                                <div style="display:flex; flex-direction:column;"><span>Reflexy FS 2</span><span style="font-size:11px; color:#8E8E93;" id="gjReflexyKet">0 Jam</span></div>
                                 <span id="gjReflexyRp">Rp</span><span id="gjReflexy" style="font-weight: 600; text-align: right;">0</span>
                             </div>
-                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.2s;">
-                                <div style="display:flex; flex-direction:column;"><span>Massage</span><span style="font-size:11px; color:#8E8E93;" id="gjMassageKet">0 Jam</span></div>
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.35s;">
+                                <div style="display:flex; flex-direction:column;"><span>Massage FS 2</span><span style="font-size:11px; color:#8E8E93;" id="gjMassageKet">0 Jam</span></div>
                                 <span id="gjMassageRp">Rp</span><span id="gjMassage" style="font-weight: 600; text-align: right;">0</span>
                             </div>
-                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.25s;">
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.4s;">
                                 <div style="display:flex; flex-direction:column;"><span>Uang Makan</span><span style="font-size:11px; color:#8E8E93;" id="gjMakanKet">0 Hari</span></div>
                                 <span id="gjMakanRp">Rp</span><span id="gjMakan" style="font-weight: 600; text-align: right;">0</span>
                             </div>
-                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.3s;">
-                                <div style="display:flex; flex-direction:column;"><span>Bonus</span><span style="font-size:11px; color:#8E8E93;" id="gjBonusKet">0 Jam</span></div>
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.45s;">
+                                <div style="display:flex; flex-direction:column;"><span>Bonus (FS1 + FS2)</span><span style="font-size:11px; color:#8E8E93;" id="gjBonusKet">0 Jam</span></div>
                                 <span id="gjBonusRp">Rp</span><span id="gjBonus" style="font-weight: 600; text-align: right;">0</span>
                             </div>
-                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; border: 1px solid rgba(0, 122, 255, 0.2); background: rgba(0, 122, 255, 0.05); margin-top: 2px; animation-delay: 0.35s;">
-                                <span style="color: #007AFF; font-weight: 600;">Total Kotor</span>
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; border: 1px solid rgba(0, 122, 255, 0.2); background: rgba(0, 122, 255, 0.05); margin-top: 2px; animation-delay: 0.5s;">
+                                <span style="color: #007AFF; font-weight: 600;">Total Kotor FS 2</span>
                                 <span style="color: #007AFF; font-weight: 700;">Rp</span><span id="gajiTotalKotor" style="color: #007AFF; font-weight: 700; text-align: right;">0</span>
                             </div>
                         </div>
 
-                        <h4 class="data-item-animate" style="margin: 0 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase; animation-delay: 0.4s;">Pengeluaran</h4>
-                        <div class="data-grid" style="margin-bottom: 16px;">
-                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.45s;">
+                        <h4 class="data-item-animate" style="margin: 0 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase; animation-delay: 0.55s;">Pengeluaran (Potongan FS 2)</h4>
+                        <div class="data-grid" style="margin-bottom: 20px;">
+                            
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.56s;">
+                                <div style="display:flex; flex-direction:column;"><span>Alpa</span><span style="font-size:11px; color:#8E8E93;" id="gjAlpaKet">0 Hari</span></div>
+                                <span id="gjAlpaRp">Rp</span><span id="gjAlpa" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
+                            </div>
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.57s;">
+                                <div style="display:flex; flex-direction:column;"><span>Izin</span><span style="font-size:11px; color:#8E8E93;" id="gjIzinKet">0 Hari</span></div>
+                                <span id="gjIzinRp">Rp</span><span id="gjIzin" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
+                            </div>
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.58s;">
+                                <div style="display:flex; flex-direction:column;"><span>Sakit</span><span style="font-size:11px; color:#8E8E93;" id="gjSakitKet">0 Hari</span></div>
+                                <span id="gjSakitRp">Rp</span><span id="gjSakit" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
+                            </div>
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.59s;">
+                                <div style="display:flex; flex-direction:column;"><span>Telat</span><span style="font-size:11px; color:#8E8E93;" id="gjTelatKet">0 Hari</span></div>
+                                <span id="gjTelatRp">Rp</span><span id="gjTelat" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
+                            </div>
+                            
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.6s;">
                                 <span>Kasbon</span><span id="gjKasbonRp">Rp</span><span id="gjKasbon" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
                             </div>
-                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.5s;">
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.65s;">
                                 <span>Paket</span><span id="gjPaketRp">Rp</span><span id="gjPaket" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
                             </div>
-                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; border: 1px solid rgba(255, 59, 48, 0.2); background: rgba(255, 59, 48, 0.05); margin-top: 2px; animation-delay: 0.55s;">
+                            <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; border: 1px solid rgba(255, 59, 48, 0.2); background: rgba(255, 59, 48, 0.05); margin-top: 2px; animation-delay: 0.7s;">
                                 <span style="color: #FF3B30; font-weight: 600;">Total Potongan</span>
                                 <span style="color: #FF3B30; font-weight: 700;">Rp</span><span id="gajiTotalKeluar" style="color: #FF3B30; font-weight: 700; text-align: right;">0</span>
                             </div>
                         </div>
 
-                        <div class="data-grid data-item-animate" style="animation-delay: 0.6s;">
-                            <div class="data-item" style="display: grid; grid-template-columns: 1fr 25px 100px; align-items: center; background: linear-gradient(135deg, #34C759, #30D158); border-radius: 14px;">
-                                <span style="color: white; font-weight: 600;">Gaji Bersih</span>
-                                <span style="color: white; font-weight: 700;">Rp</span><span id="gajiGrandTotal" style="color: white; font-weight: 700; text-align: right; font-size: 18px;">0</span>
+                        <h4 class="data-item-animate" style="margin: 0 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase; animation-delay: 0.75s;">Penerimaan Bersih</h4>
+                        
+                        <div class="data-grid data-item-animate" style="animation-delay: 0.8s; margin-bottom: 10px;">
+                            <div class="data-item" style="display: grid; grid-template-columns: 1fr 25px 100px; align-items: center; background: linear-gradient(135deg, #007AFF, #0056b3); border-radius: 14px;">
+                                <div style="display:flex; flex-direction:column;">
+                                    <span style="color: white; font-weight: 600;">Bersih FS 1</span>
+                                    <span style="font-size:10px; color: rgba(255,255,255,0.8);">Murni Komisi</span>
+                                </div>
+                                <span style="color: white; font-weight: 700;">Rp</span><span id="gajiBersihFS1" style="color: white; font-weight: 700; text-align: right; font-size: 18px;">0</span>
                             </div>
                         </div>
+
+                        <div class="data-grid data-item-animate" style="animation-delay: 0.85s;">
+                            <div class="data-item" style="display: grid; grid-template-columns: 1fr 25px 100px; align-items: center; background: linear-gradient(135deg, #34C759, #30D158); border-radius: 14px;">
+                                <div style="display:flex; flex-direction:column;">
+                                    <span style="color: white; font-weight: 600;">Bersih FS 2</span>
+                                    <span style="font-size:10px; color: rgba(255,255,255,0.8);">FS 2 Kotor - Potongan</span>
+                                </div>
+                                <span style="color: white; font-weight: 700;">Rp</span><span id="gajiBersihFS2" style="color: white; font-weight: 700; text-align: right; font-size: 18px;">0</span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
                 <div class="ios-modal-footer-grid" style="grid-template-columns: 1fr;">
@@ -111,7 +168,7 @@ function bukaMenuGaji(event) {
     modal.style.display = 'flex';
 }
 
-// 3. LOGIKA UTAMA: FIRESTORE PARALLEL (SINKRON NAMA HARI)
+// 3. LOGIKA UTAMA: FIRESTORE PARALLEL (Cek Kolom 'Kantor')
 async function prosesGaji() {
     const periode = document.getElementById('inputPeriodeGaji').value;
     const btn = document.getElementById('btnHitungGaji');
@@ -125,24 +182,30 @@ async function prosesGaji() {
     const blnNama = p[0];
     const thnId = parseInt(p[1]);
     const blnIndex = namaBulanGaji.indexOf(blnNama);
-    const blnTahunId = blnNama + "_" + thnId; // April_2026
+    const blnTahunId = blnNama + "_" + thnId; 
     const uid = userAuth.uid;
 
-    let jamReflexy = 0, jamMassage = 0, hariMasuk = 0, valKasbon = 0, valPaket = 0;
+    let jamReflexyFS1 = 0, jamMassageFS1 = 0;
+    let jamReflexyFS2 = 0, jamMassageFS2 = 0;
+    
+    // Variabel Absen
+    let hariMasuk = 0, hariAlpa = 0, hariIzin = 0, hariSakit = 0, hariTelat = 0;
+    
+    let valKasbon = 0, valPaket = 0;
 
     try {
         let listKerjaPromises = [];
         let listKasbonPromises = [];
         let listAbsenPromises = [];
 
+        // MENDAPATKAN JUMLAH HARI DALAM 1 BULAN
         const daysInMonth = new Date(thnId, blnIndex + 1, 0).getDate();
         const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
 
-        // --- STEP A: Persiapkan Request Sinkron Format Nama Hari ---
         for (let i = 1; i <= daysInMonth; i++) {
             const dObj = new Date(thnId, blnIndex, i);
-            const tglFullStr = dObj.toLocaleDateString('id-ID', opsi); // "Senin, 27 April 2026"
-            const dateId = tglFullStr.replace(', ', '_').replace(/\s/g, '_'); // "Senin_27_April_2026"
+            const tglFullStr = dObj.toLocaleDateString('id-ID', opsi); 
+            const dateId = tglFullStr.replace(', ', '_').replace(/\s/g, '_'); 
 
             const baseRef = window.firestore.collection('data').doc(uid);
             
@@ -151,7 +214,6 @@ async function prosesGaji() {
             listAbsenPromises.push(baseRef.collection('absen').doc(blnTahunId).collection(dateId).doc('harian').get());
         }
 
-        // --- STEP B: Eksekusi Parallel ---
         const [allKerjaSnap, allKasbonSnap, allAbsenSnap] = await Promise.all([
             Promise.all(listKerjaPromises),
             Promise.all(listKasbonPromises),
@@ -163,8 +225,13 @@ async function prosesGaji() {
             snap.forEach(doc => {
                 const item = doc.data();
                 if (item.detail_jam) {
-                    jamReflexy += parseFloat(item.detail_jam.reflexy || 0);
-                    jamMassage += parseFloat(item.detail_jam.massage || 0);
+                    if (item.kantor === 'FIVE STAR 1') {
+                        jamReflexyFS1 += parseFloat(item.detail_jam.reflexy || 0);
+                        jamMassageFS1 += parseFloat(item.detail_jam.massage || 0);
+                    } else {
+                        jamReflexyFS2 += parseFloat(item.detail_jam.reflexy || 0);
+                        jamMassageFS2 += parseFloat(item.detail_jam.massage || 0);
+                    }
                 }
             });
         });
@@ -179,43 +246,94 @@ async function prosesGaji() {
             });
         });
 
-        // --- STEP E: Olah Absen (Hitung Uang Makan) ---
+        // --- STEP E: Olah Absen (Uang Makan Hanya untuk "Masuk") ---
         allAbsenSnap.forEach(doc => {
             if (doc.exists) {
                 const item = doc.data();
-                if (item.status === 'Masuk' || item.status === 'Telat') hariMasuk++;
+                if (item.status === 'Masuk') {
+                    hariMasuk++; // Hanya "Masuk" yang dapat Uang Makan
+                } else if (item.status === 'Telat') {
+                    // Telat TIDAK dapat uang makan, hanya dicatat sebagai telat
+                    hariTelat++;
+                } else if (item.status === 'Alpa' || item.status === 'Tanpa Keterangan') {
+                    hariAlpa++;
+                } else if (item.status === 'Izin') {
+                    hariIzin++;
+                } else if (item.status === 'Sakit') {
+                    hariSakit++;
+                }
             }
         });
 
         // --- STEP F: KALKULASI AKHIR ---
-        const totalGjReflexy = jamReflexy * TARIF.REFLEXY;
-        const totalGjMassage = jamMassage * TARIF.MASSAGE;
-        const totalUangMakan = hariMasuk * TARIF.MAKAN;
-        const totalJam = jamReflexy + jamMassage;
-        const totalBonus = Math.floor(totalJam * TARIF.BONUS_PER_JAM);
+        
+        // 1. Kalkulasi FS 1
+        const totalGjReflexyFS1 = jamReflexyFS1 * TARIF.REFLEXY;
+        const totalGjMassageFS1 = jamMassageFS1 * TARIF.MASSAGE;
+        const bersihFS1 = totalGjReflexyFS1 + totalGjMassageFS1;
 
-        const totalKotor = TARIF.POKOK + totalGjReflexy + totalGjMassage + totalUangMakan + totalBonus;
-        const totalKeluar = valKasbon + valPaket;
-        const grandTotal = totalKotor - totalKeluar;
+        // 2. Kalkulasi FS 2 & Potongan
+        const totalGjReflexyFS2 = jamReflexyFS2 * TARIF.REFLEXY;
+        const totalGjMassageFS2 = jamMassageFS2 * TARIF.MASSAGE;
+        const totalUangMakan = hariMasuk * TARIF.MAKAN; // hariMasuk murni hanya dari status "Masuk"
+        
+        // Bonus digabung dari total jam FS1 dan FS2
+        const totalJamAll = jamReflexyFS1 + jamMassageFS1 + jamReflexyFS2 + jamMassageFS2;
+        const totalBonusTotal = Math.floor(totalJamAll * TARIF.BONUS_PER_JAM);
+
+        const totalKotorFS2 = TARIF.POKOK + totalGjReflexyFS2 + totalGjMassageFS2 + totalUangMakan + totalBonusTotal;
+        
+        // --- LOGIKA POTONGAN BARU ---
+        const potAlpa = hariAlpa * TARIF.POTONGAN_ALPA;
+        
+        // RUMUS IZIN: (Gaji Pokok / Jumlah Hari di Bulan Tersebut) * Jumlah Hari Izin
+        const potonganIzinPerHari = Math.round(TARIF.POKOK / daysInMonth);
+        const potIzin = hariIzin * potonganIzinPerHari;
+        
+        const potSakit = hariSakit * TARIF.POTONGAN_SAKIT;
+        const potTelat = hariTelat * TARIF.POTONGAN_TELAT;
+        
+        const totalKeluar = valKasbon + valPaket + potAlpa + potIzin + potSakit + potTelat;
+        const bersihFS2 = totalKotorFS2 - totalKeluar;
 
         // --- UPDATE UI ---
-        document.getElementById('gjReflexyKet').innerText = jamReflexy.toFixed(1).replace('.0', '') + " Jam";
-        document.getElementById('gjMassageKet').innerText = jamMassage.toFixed(1).replace('.0', '') + " Jam";
-        document.getElementById('gjMakanKet').innerText = hariMasuk + " Hari";
-        document.getElementById('gjBonusKet').innerText = totalJam.toFixed(1).replace('.0', '') + " Jam";
+        document.getElementById('gjReflexyKetFS1').innerText = jamReflexyFS1.toFixed(1).replace('.0', '') + " Jam";
+        document.getElementById('gjMassageKetFS1').innerText = jamMassageFS1.toFixed(1).replace('.0', '') + " Jam";
+        setNilaiGaji('gjReflexyFS1', totalGjReflexyFS1);
+        setNilaiGaji('gjMassageFS1', totalGjMassageFS1);
+        setNilaiGaji('gajiTotalFS1', bersihFS1);
+
+        document.getElementById('gjReflexyKet').innerText = jamReflexyFS2.toFixed(1).replace('.0', '') + " Jam";
+        document.getElementById('gjMassageKet').innerText = jamMassageFS2.toFixed(1).replace('.0', '') + " Jam";
+        document.getElementById('gjMakanKet').innerText = hariMasuk + " Hari"; // Hanya menampilkan hari murni Masuk
+        document.getElementById('gjBonusKet').innerText = totalJamAll.toFixed(1).replace('.0', '') + " Jam"; 
 
         setNilaiGaji('gjPokok', TARIF.POKOK);
-        setNilaiGaji('gjReflexy', totalGjReflexy);
-        setNilaiGaji('gjMassage', totalGjMassage);
+        setNilaiGaji('gjReflexy', totalGjReflexyFS2);
+        setNilaiGaji('gjMassage', totalGjMassageFS2);
         setNilaiGaji('gjMakan', totalUangMakan);
-        setNilaiGaji('gjBonus', totalBonus);
-        setNilaiGaji('gajiTotalKotor', totalKotor);
+        setNilaiGaji('gjBonus', totalBonusTotal);
+        setNilaiGaji('gajiTotalKotor', totalKotorFS2);
+
+        // Update UI Potongan
+        document.getElementById('gjAlpaKet').innerText = hariAlpa + " Hari";
+        setNilaiGaji('gjAlpa', potAlpa);
+        
+        document.getElementById('gjIzinKet').innerText = hariIzin + " Hari";
+        setNilaiGaji('gjIzin', potIzin);
+        
+        document.getElementById('gjSakitKet').innerText = hariSakit + " Hari";
+        setNilaiGaji('gjSakit', potSakit);
+        
+        document.getElementById('gjTelatKet').innerText = hariTelat + " Hari";
+        setNilaiGaji('gjTelat', potTelat);
 
         setNilaiGaji('gjKasbon', valKasbon);
         setNilaiGaji('gjPaket', valPaket);
         setNilaiGaji('gajiTotalKeluar', totalKeluar);
-
-        document.getElementById('gajiGrandTotal').innerText = new Intl.NumberFormat('id-ID').format(grandTotal);
+        
+        document.getElementById('gajiBersihFS1').innerText = new Intl.NumberFormat('id-ID').format(bersihFS1);
+        document.getElementById('gajiBersihFS2').innerText = new Intl.NumberFormat('id-ID').format(bersihFS2);
 
         document.getElementById('areaHasilGaji').classList.add('show');
 
