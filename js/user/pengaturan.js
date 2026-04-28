@@ -542,12 +542,33 @@ function renderInformasiAplikasi(isBackNav = false) {
 }
 
 function bacaVersiDariSW() {
-    fetch('sw.js').then(r => r.text()).then(text => {
-        const match = text.match(/const VERSION\s*=\s*['"]([^'"]+)['"]/);
-        const el = document.getElementById('teksVersiApp');
-        if (match && el) el.innerText = 'Versi ' + match[1];
-    }).catch(() => { if(document.getElementById('teksVersiApp')) document.getElementById('teksVersiApp').innerText = 'Versi Offline'; });
+    // Menggunakan path relatif 'sw.js' agar aman saat di-hosting di sub-folder (seperti GitHub Pages)
+    fetch('sw.js')
+        .then(response => {
+            if (!response.ok) throw new Error("File SW tidak ditemukan");
+            return response.text();
+        })
+        .then(text => {
+            // Regex ini mencari variabel VERSION = "x.x.x" atau cacheName = "xxx"
+            const match = text.match(/(?:const|let|var)\s+(?:VERSION|CACHE_NAME)\s*=\s*['"]([^'"]+)['"]/i);
+            const el = document.getElementById('teksVersiApp');
+            
+            if (el) {
+                if (match && match[1]) {
+                    // Membersihkan kata 'cache' jika yang terbaca adalah CACHE_NAME
+                    let versiBersih = match[1].replace(/cache-/i, '').replace(/fivestar-/i, '');
+                    el.innerText = 'Versi ' + versiBersih;
+                } else {
+                    el.innerText = 'Versi PWA Aktif';
+                }
+            }
+        })
+        .catch(() => { 
+            const el = document.getElementById('teksVersiApp');
+            if (el) el.innerText = 'Versi Standard'; 
+        });
 }
+
 
 // --- 8. LOGOUT & DELETE (LEVEL 3) ---
 
