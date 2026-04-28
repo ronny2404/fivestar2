@@ -65,13 +65,51 @@ if (!document.getElementById('profil-custom-style')) {
 // --- 2. UTILITY FUNCTIONS ---
 function hitungUmur(tglLahir) {
     if (!tglLahir) return "Belum diatur";
-    const lahir = new Date(tglLahir);
+
+    let lahir;
+    
+    // Logika Pendeteksi Format Indonesia
+    if (typeof tglLahir === 'string' && tglLahir.includes(' ')) {
+        const daftarBulan = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+        
+        // Menghapus nama hari jika ada (contoh: "Selasa, 28 April 1997" -> "28 April 1997")
+        let tglBersih = tglLahir.includes(',') ? tglLahir.split(',')[1].trim() : tglLahir.trim();
+        let parts = tglBersih.split(' ');
+
+        if (parts.length >= 3) {
+            let tgl = parseInt(parts[0]);
+            let bln = daftarBulan.indexOf(parts[1]); // Mencari posisi bulan (0-11)
+            let thn = parseInt(parts[2]);
+            
+            if (bln !== -1) {
+                lahir = new Date(thn, bln, tgl);
+            }
+        }
+    }
+
+    // Fallback: Jika cara di atas gagal, gunakan cara standar
+    if (!lahir || isNaN(lahir.getTime())) {
+        lahir = new Date(tglLahir);
+    }
+
+    // Jika tetap gagal (Format benar-benar hancur)
+    if (isNaN(lahir.getTime())) return "NaN Tahun";
+
     const hariIni = new Date();
     let umur = hariIni.getFullYear() - lahir.getFullYear();
-    const bulan = hariIni.getMonth() - lahir.getMonth();
-    if (bulan < 0 || (bulan === 0 && hariIni.getDate() < lahir.getDate())) umur--;
+    const m = hariIni.getMonth() - lahir.getMonth();
+    
+    // Koreksi jika belum ulang tahun di tahun ini
+    if (m < 0 || (m === 0 && hariIni.getDate() < lahir.getDate())) {
+        umur--;
+    }
+    
     return umur + " Tahun";
 }
+
 
 async function refreshDataProfilUI() {
     const userAuth = firebase.auth().currentUser;
