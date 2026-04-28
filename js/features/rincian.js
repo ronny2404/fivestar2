@@ -21,7 +21,7 @@ if (!document.getElementById('rincian-animation-style')) {
     document.head.appendChild(style);
 }
 
-// 2. MODAL UTAMA
+// 2. MODAL UTAMA (LEVEL 1 / ROOT MODAL)
 function bukaMenuRincian(event) {
     if(event) event.preventDefault();
     let modal = document.getElementById('rincianModal');
@@ -35,10 +35,10 @@ function bukaMenuRincian(event) {
         modal.innerHTML = `
             <div class="ios-modal-form profile-expand-anim" style="width: 340px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
                 <div class="ios-modal-header" style="flex-shrink: 0;">
-                    <h3>Rekap Jam Kerja</h3>
+                    <h3>REKAP JAM KERJA</h3>
                 </div>
                 <div class="ios-modal-body" style="padding: 0; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
-                    <div style="padding: 15px 20px; flex-shrink: 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                    <div style="padding: 0px 20px; flex-shrink: 0; border-bottom: 0px solid rgba(0,0,0,0.05);">
                         <div style="display: flex; flex-direction: column; gap: 12px;">
                             <div class="input-group">
                                 <label>Dari Tanggal</label>
@@ -58,7 +58,7 @@ function bukaMenuRincian(event) {
                         </button>
                     </div>
 
-                    <div id="areaHasilRincian" style="padding: 0 20px 20px 20px; overflow-y: auto; flex-grow: 1; text-align: left;">
+                    <div id="areaHasilRincian" style="padding: 0px 20px 10px 20px; overflow-y: auto; flex-grow: 1; text-align: left;">
                         <h4 class="rincian-item-animate" style="margin: 20px 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase; animation-delay: 0.1s;">FIVE STAR 1</h4>
                         <div class="data-grid rincian-item-animate" style="margin-bottom: 16px; animation-delay: 0.15s;">
                             <div class="data-item"><span>Reflexy</span><p id="rPusatReflexy">0 Jam</p></div>
@@ -110,6 +110,25 @@ function bukaMenuRincian(event) {
 
     document.getElementById('areaHasilRincian').classList.remove('show');
     modal.style.display = 'flex';
+    
+    // --- LOGIKA SMART BACK BUTTON (LEVELING SINKRON DENGAN MAIN.JS) ---
+    const baseLvl = (history.state && history.state.level) ? history.state.level : 0;
+    const myLvl = baseLvl + 1; // Rincian adalah Level 1
+    history.pushState({ id: 'modalRincian', level: myLvl, rootModal: 'modalRincian' }, '', ''); 
+    
+    window.handleBackRincian = function(e) {
+        const currentLvl = e.state ? (e.state.level || 0) : 0;
+        // Hanya tutup modal Rincian jika history mundur ke bawah level pondasinya
+        if (currentLvl < myLvl) {
+            const m = document.getElementById('rincianModal');
+            if (m) m.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackRincian);
+        }
+    };
+    
+    window.removeEventListener('popstate', window.handleBackRincian);
+    window.addEventListener('popstate', window.handleBackRincian);
+
 }
 
 // 3. LOGIKA UTAMA: FIRESTORE PARALLEL FETCHING
@@ -149,10 +168,7 @@ async function prosesRincian() {
 
         // --- STEP A: Kumpulkan Semua Request (SINKRON DENGAN PATH BARU) ---
         while (tglLoop <= dSampai) {
-            // Generate String Format Baru: "Minggu, 26 April 2026"
             const tglFullStr = tglLoop.toLocaleDateString('id-ID', opsi);
-            
-            // Generate Path (Sinkron dengan simpanDataKerja)
             const temp = tglFullStr.split(', ');
             const tglMurni = temp[1];
             const p = tglMurni.split(" ");
@@ -160,7 +176,6 @@ async function prosesRincian() {
             const blnTahunId = p[1] + "_" + p[2]; // April_2026
             const dateId = tglFullStr.replace(', ', '_').replace(/\s/g, '_'); // Minggu_26_April_2026
 
-            // Jalur: data -> [UID] -> kerja -> [Bulan] -> [Tanggal_Hari]
             const prom = window.firestore
                 .collection('data').doc(uid)
                 .collection('kerja').doc(blnTahunId)
@@ -176,7 +191,6 @@ async function prosesRincian() {
             if (!snap.empty) {
                 snap.forEach(doc => {
                     const item = doc.data();
-                    // Gunakan trim() agar perbandingan kantor lebih akurat
                     const namaKantor = item.kantor ? item.kantor.trim() : "";
                     const target = (namaKantor === 'FIVE STAR 1') ? rekap.fs1 : rekap.fs2;
 
@@ -231,5 +245,13 @@ async function prosesRincian() {
 
 function tutupMenuRincian() {
     const modal = document.getElementById('rincianModal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.style.display = 'none';
+        
+        // Pastikan hanya mundur history jika tombol manual "Tutup" diklik
+        if (history.state && history.state.id === 'modalRincian') {
+            history.back(); 
+        }
+        window.removeEventListener('popstate', window.handleBackRincian);
+    }
 }

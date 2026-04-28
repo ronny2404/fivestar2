@@ -29,7 +29,7 @@ if (!document.getElementById('gaji-result-style')) {
     document.head.appendChild(style);
 }
 
-// 2. FUNGSI BUKA MODAL GAJI
+// 2. FUNGSI BUKA MODAL GAJI (LEVEL 1 / ROOT)
 function bukaMenuGaji(event) {
     if(event) event.preventDefault();
     let modal = document.getElementById('gajiModal');
@@ -41,11 +41,14 @@ function bukaMenuGaji(event) {
         modal.style.zIndex = '21000';
         
         modal.innerHTML = `
-            <div class="ios-modal-form profile-expand-anim" style="width: 350px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
-                <div class="ios-modal-header" style="flex-shrink: 0;"><h3>Slip Gaji</h3></div>
+            <div class="ios-modal-form profile-expand-anim" style="width: 350px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg); border-radius: 20px;">
+                <div class="ios-modal-header" style="flex-shrink: 0; border-bottom: 0.5px solid rgba(142,142,147,0.2);">
+                    <h3 style="margin: 0; color: var(--text-primary);">SLIP GAJI</h3>
+                </div>
                 <div class="ios-modal-body" style="padding: 0; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
-                    <div style="padding: 15px 20px; flex-shrink: 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
-                        <div class="input-group"><label>Periode Gaji</label>
+                    <div style="padding: 15px 20px 0 20px; flex-shrink: 0;">
+                        <div class="input-group">
+                            <label>Periode Gaji</label>
                             <input type="text" id="inputPeriodeGaji" readonly onclick="bukaPickerPeriodeGaji()" placeholder="Pilih Bulan & Tahun" style="cursor: pointer; font-weight: 600; text-align: center;">
                         </div>
                         <button id="btnHitungGaji" onclick="prosesGaji()" class="btn-simpan" style="margin-top:15px; width:100%; border:none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; font-weight: bold; border-radius: 12px; background-color: #007AFF !important; color: #FFFFFF !important;">
@@ -53,17 +56,17 @@ function bukaMenuGaji(event) {
                         </button>
                     </div>
 
-                    <div id="areaHasilGaji" style="padding: 0 20px 20px 20px; overflow-y: auto; flex-grow: 1; text-align: left;">
+                    <div id="areaHasilGaji" style="padding: 0px 20px 20px 20px; overflow-y: auto; flex-grow: 1; text-align: left;">
                         
                         <h4 style="margin: 20px 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase;">Pendapatan Five Star 1</h4>
                         <div class="data-grid" style="margin-bottom: 16px;">
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.1s;">
-                                <div style="display:flex; flex-direction:column;"><span>Reflexy FS 1</span><span style="font-size:11px; color:#8E8E93;" id="gjReflexyKetFS1">0 Jam</span></div>
-                                <span id="gjReflexyFS1Rp">Rp</span><span id="gjReflexyFS1" style="font-weight: 600; text-align: right;">0</span>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Reflexy FS 1</span><span style="font-size:11px; color:#8E8E93;" id="gjReflexyKetFS1">0 Jam</span></div>
+                                <span id="gjReflexyFS1Rp" style="color: var(--text-primary);">Rp</span><span id="gjReflexyFS1" style="font-weight: 600; text-align: right; color: var(--text-primary);">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.15s;">
-                                <div style="display:flex; flex-direction:column;"><span>Massage FS 1</span><span style="font-size:11px; color:#8E8E93;" id="gjMassageKetFS1">0 Jam</span></div>
-                                <span id="gjMassageFS1Rp">Rp</span><span id="gjMassageFS1" style="font-weight: 600; text-align: right;">0</span>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Massage FS 1</span><span style="font-size:11px; color:#8E8E93;" id="gjMassageKetFS1">0 Jam</span></div>
+                                <span id="gjMassageFS1Rp" style="color: var(--text-primary);">Rp</span><span id="gjMassageFS1" style="font-weight: 600; text-align: right; color: var(--text-primary);">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; border: 1px solid rgba(0, 122, 255, 0.2); background: rgba(0, 122, 255, 0.05); margin-top: 2px; animation-delay: 0.2s;">
                                 <span style="color: #007AFF; font-weight: 600;">Total Gaji FS 1</span>
@@ -74,24 +77,24 @@ function bukaMenuGaji(event) {
                         <h4 style="margin: 10px 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase;">Pendapatan Five Star 2</h4>
                         <div class="data-grid" style="margin-bottom: 16px;">
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.25s;">
-                                <div style="display:flex; flex-direction:column;"><span>Gaji Pokok</span><span style="font-size:11px; color:#8E8E93;">Tetap</span></div>
-                                <span id="gjPokokRp">Rp</span><span id="gjPokok" style="font-weight: 600; text-align: right;">0</span>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Gaji Pokok</span><span style="font-size:11px; color:#8E8E93;">Tetap</span></div>
+                                <span id="gjPokokRp" style="color: var(--text-primary);">Rp</span><span id="gjPokok" style="font-weight: 600; text-align: right; color: var(--text-primary);">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.3s;">
-                                <div style="display:flex; flex-direction:column;"><span>Reflexy FS 2</span><span style="font-size:11px; color:#8E8E93;" id="gjReflexyKet">0 Jam</span></div>
-                                <span id="gjReflexyRp">Rp</span><span id="gjReflexy" style="font-weight: 600; text-align: right;">0</span>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Reflexy FS 2</span><span style="font-size:11px; color:#8E8E93;" id="gjReflexyKet">0 Jam</span></div>
+                                <span id="gjReflexyRp" style="color: var(--text-primary);">Rp</span><span id="gjReflexy" style="font-weight: 600; text-align: right; color: var(--text-primary);">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.35s;">
-                                <div style="display:flex; flex-direction:column;"><span>Massage FS 2</span><span style="font-size:11px; color:#8E8E93;" id="gjMassageKet">0 Jam</span></div>
-                                <span id="gjMassageRp">Rp</span><span id="gjMassage" style="font-weight: 600; text-align: right;">0</span>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Massage FS 2</span><span style="font-size:11px; color:#8E8E93;" id="gjMassageKet">0 Jam</span></div>
+                                <span id="gjMassageRp" style="color: var(--text-primary);">Rp</span><span id="gjMassage" style="font-weight: 600; text-align: right; color: var(--text-primary);">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.4s;">
-                                <div style="display:flex; flex-direction:column;"><span>Uang Makan</span><span style="font-size:11px; color:#8E8E93;" id="gjMakanKet">0 Hari</span></div>
-                                <span id="gjMakanRp">Rp</span><span id="gjMakan" style="font-weight: 600; text-align: right;">0</span>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Uang Makan</span><span style="font-size:11px; color:#8E8E93;" id="gjMakanKet">0 Hari</span></div>
+                                <span id="gjMakanRp" style="color: var(--text-primary);">Rp</span><span id="gjMakan" style="font-weight: 600; text-align: right; color: var(--text-primary);">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.45s;">
-                                <div style="display:flex; flex-direction:column;"><span>Bonus (FS1 + FS2)</span><span style="font-size:11px; color:#8E8E93;" id="gjBonusKet">0 Jam</span></div>
-                                <span id="gjBonusRp">Rp</span><span id="gjBonus" style="font-weight: 600; text-align: right;">0</span>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Bonus (FS1+FS2)</span><span style="font-size:11px; color:#8E8E93;" id="gjBonusKet">0 Jam</span></div>
+                                <span id="gjBonusRp" style="color: var(--text-primary);">Rp</span><span id="gjBonus" style="font-weight: 600; text-align: right; color: var(--text-primary);">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; border: 1px solid rgba(0, 122, 255, 0.2); background: rgba(0, 122, 255, 0.05); margin-top: 2px; animation-delay: 0.5s;">
                                 <span style="color: #007AFF; font-weight: 600;">Total Kotor FS 2</span>
@@ -103,27 +106,27 @@ function bukaMenuGaji(event) {
                         <div class="data-grid" style="margin-bottom: 20px;">
                             
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.56s;">
-                                <div style="display:flex; flex-direction:column;"><span>Alpa</span><span style="font-size:11px; color:#8E8E93;" id="gjAlpaKet">0 Hari</span></div>
-                                <span id="gjAlpaRp">Rp</span><span id="gjAlpa" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Alpa</span><span style="font-size:11px; color:#8E8E93;" id="gjAlpaKet">0 Hari</span></div>
+                                <span id="gjAlpaRp" style="color: var(--text-primary);">Rp</span><span id="gjAlpa" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.57s;">
-                                <div style="display:flex; flex-direction:column;"><span>Izin</span><span style="font-size:11px; color:#8E8E93;" id="gjIzinKet">0 Hari</span></div>
-                                <span id="gjIzinRp">Rp</span><span id="gjIzin" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Izin</span><span style="font-size:11px; color:#8E8E93;" id="gjIzinKet">0 Hari</span></div>
+                                <span id="gjIzinRp" style="color: var(--text-primary);">Rp</span><span id="gjIzin" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.58s;">
-                                <div style="display:flex; flex-direction:column;"><span>Sakit</span><span style="font-size:11px; color:#8E8E93;" id="gjSakitKet">0 Hari</span></div>
-                                <span id="gjSakitRp">Rp</span><span id="gjSakit" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Sakit</span><span style="font-size:11px; color:#8E8E93;" id="gjSakitKet">0 Hari</span></div>
+                                <span id="gjSakitRp" style="color: var(--text-primary);">Rp</span><span id="gjSakit" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.59s;">
-                                <div style="display:flex; flex-direction:column;"><span>Telat</span><span style="font-size:11px; color:#8E8E93;" id="gjTelatKet">0 Hari</span></div>
-                                <span id="gjTelatRp">Rp</span><span id="gjTelat" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
+                                <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Telat</span><span style="font-size:11px; color:#8E8E93;" id="gjTelatKet">0 Hari</span></div>
+                                <span id="gjTelatRp" style="color: var(--text-primary);">Rp</span><span id="gjTelat" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
                             </div>
                             
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.6s;">
-                                <span>Kasbon</span><span id="gjKasbonRp">Rp</span><span id="gjKasbon" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
+                                <span style="color: var(--text-primary);">Kasbon</span><span id="gjKasbonRp" style="color: var(--text-primary);">Rp</span><span id="gjKasbon" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.65s;">
-                                <span>Paket</span><span id="gjPaketRp">Rp</span><span id="gjPaket" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
+                                <span style="color: var(--text-primary);">Paket</span><span id="gjPaketRp" style="color: var(--text-primary);">Rp</span><span id="gjPaket" style="font-weight: 600; text-align: right; color:#FF3B30;">0</span>
                             </div>
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; border: 1px solid rgba(255, 59, 48, 0.2); background: rgba(255, 59, 48, 0.05); margin-top: 2px; animation-delay: 0.7s;">
                                 <span style="color: #FF3B30; font-weight: 600;">Total Potongan</span>
@@ -136,7 +139,7 @@ function bukaMenuGaji(event) {
                         <div class="data-grid data-item-animate" style="animation-delay: 0.8s; margin-bottom: 10px;">
                             <div class="data-item" style="display: grid; grid-template-columns: 1fr 25px 100px; align-items: center; background: linear-gradient(135deg, #007AFF, #0056b3); border-radius: 14px;">
                                 <div style="display:flex; flex-direction:column;">
-                                    <span style="color: white; font-weight: 600;">Bersih FS 1</span>
+                                    <span style="color: white; font-weight: 600;">FIVE STAR 1</span>
                                     <span style="font-size:10px; color: rgba(255,255,255,0.8);">Murni Komisi</span>
                                 </div>
                                 <span style="color: white; font-weight: 700;">Rp</span><span id="gajiBersihFS1" style="color: white; font-weight: 700; text-align: right; font-size: 18px;">0</span>
@@ -146,7 +149,7 @@ function bukaMenuGaji(event) {
                         <div class="data-grid data-item-animate" style="animation-delay: 0.85s;">
                             <div class="data-item" style="display: grid; grid-template-columns: 1fr 25px 100px; align-items: center; background: linear-gradient(135deg, #34C759, #30D158); border-radius: 14px;">
                                 <div style="display:flex; flex-direction:column;">
-                                    <span style="color: white; font-weight: 600;">Bersih FS 2</span>
+                                    <span style="color: white; font-weight: 600;">FIVE STAR 2</span>
                                     <span style="font-size:10px; color: rgba(255,255,255,0.8);">FS 2 Kotor - Potongan</span>
                                 </div>
                                 <span style="color: white; font-weight: 700;">Rp</span><span id="gajiBersihFS2" style="color: white; font-weight: 700; text-align: right; font-size: 18px;">0</span>
@@ -155,8 +158,8 @@ function bukaMenuGaji(event) {
 
                     </div>
                 </div>
-                <div class="ios-modal-footer-grid" style="grid-template-columns: 1fr;">
-                    <button class="btn-batal" onclick="tutupMenuGaji()" style="color: #007AFF !important;">Tutup</button>
+                <div class="ios-modal-footer-grid" style="grid-template-columns: 1fr; border-top: 0.5px solid rgba(142,142,147,0.2);">
+                    <button class="btn-batal" onclick="tutupMenuGaji()" style="width: 100%; border: none; font-weight: 700; color: #007AFF !important; padding: 16px; background: transparent; font-size: 17px;">Tutup</button>
                 </div>
             </div>`;
         document.body.appendChild(modal);
@@ -166,6 +169,23 @@ function bukaMenuGaji(event) {
     document.getElementById('inputPeriodeGaji').value = namaBulanGaji[d.getMonth()] + " " + d.getFullYear();
     document.getElementById('areaHasilGaji').classList.remove('show');
     modal.style.display = 'flex';
+    
+    // --- LOGIKA SMART BACK BUTTON (LEVELING SINKRON DENGAN MAIN.JS) ---
+    const baseLvl = (history.state && history.state.level) ? history.state.level : 0;
+    const myLvl = baseLvl + 1; // Gaji Modal = Level 1
+    history.pushState({ id: 'modalGaji', level: myLvl, rootModal: 'modalGaji' }, '', ''); 
+    
+    window.handleBackGaji = function(e) {
+        const currentLvl = e.state ? (e.state.level || 0) : 0;
+        if (currentLvl < myLvl) {
+            const m = document.getElementById('gajiModal');
+            if (m) m.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackGaji);
+        }
+    };
+    
+    window.removeEventListener('popstate', window.handleBackGaji);
+    window.addEventListener('popstate', window.handleBackGaji);
 }
 
 // 3. LOGIKA UTAMA: FIRESTORE PARALLEL (Cek Kolom 'Kantor')
@@ -305,7 +325,7 @@ async function prosesGaji() {
 
         document.getElementById('gjReflexyKet').innerText = jamReflexyFS2.toFixed(1).replace('.0', '') + " Jam";
         document.getElementById('gjMassageKet').innerText = jamMassageFS2.toFixed(1).replace('.0', '') + " Jam";
-        document.getElementById('gjMakanKet').innerText = hariMasuk + " Hari"; // Hanya menampilkan hari murni Masuk
+        document.getElementById('gjMakanKet').innerText = hariMasuk + " Hari"; 
         document.getElementById('gjBonusKet').innerText = totalJamAll.toFixed(1).replace('.0', '') + " Jam"; 
 
         setNilaiGaji('gjPokok', TARIF.POKOK);
@@ -339,7 +359,7 @@ async function prosesGaji() {
 
     } catch (e) {
         console.error(e);
-        IOSAlert.show("Gagal", "Kesalahan memproses gaji: " + e.message);
+        if(typeof IOSAlert !== 'undefined') IOSAlert.show("Gagal", "Kesalahan memproses gaji: " + e.message);
     } finally {
         btn.innerHTML = '<i class="fa-solid fa-calculator"></i> Hitung Gaji';
         btn.disabled = false;
@@ -359,7 +379,9 @@ const setNilaiGaji = (idRoot, angka) => {
     }
 };
 
-// --- LOGIKA PICKER PERIODE ---
+// ==========================================
+// LOGIKA PICKER PERIODE (SISTEM LEVEL & KONSISTENSI UI)
+// ==========================================
 let tempPeriodeDateGaji = new Date();
 
 function bukaPickerPeriodeGaji() {
@@ -368,11 +390,26 @@ function bukaPickerPeriodeGaji() {
         picker = document.createElement('div');
         picker.id = 'pickerMYGaji';
         picker.className = 'ios-overlay';
-        picker.style.zIndex = '26000';
+        picker.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 26000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);`;
         document.body.appendChild(picker);
     }
     renderPickerMYGajiInner(true);
     picker.style.display = 'flex';
+
+    // --- STEP NAVIGATION LOGIC (Level 2) ---
+    const baseLvl = (history.state && history.state.level) ? history.state.level : 10;
+    const myLvl = baseLvl + 1;
+    history.pushState({ id: 'pickerBulanGaji', level: myLvl }, '', '');
+
+    window.handleBackPickerBulanGaji = function(e) {
+        const currentLvl = e.state ? (e.state.level || 0) : 0;
+        if (currentLvl < myLvl) {
+            const p = document.getElementById('pickerMYGaji');
+            if (p) p.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackPickerBulanGaji);
+        }
+    };
+    window.addEventListener('popstate', window.handleBackPickerBulanGaji);
 }
 
 function renderPickerMYGajiInner(withAnim = false) {
@@ -381,70 +418,133 @@ function renderPickerMYGajiInner(withAnim = false) {
     const picker = document.getElementById('pickerMYGaji');
     const animStyle = withAnim ? '' : 'animation: none !important; transition: none !important;';
     
+    // KONSISTENSI: Width 320px, Height 380px, Grid 3 kolom
     picker.innerHTML = `
-        <div class="ios-modal-form profile-expand-anim" style="width: 300px; padding: 20px; ${animStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="ios-modal-form profile-expand-anim" style="width: 320px; height: 380px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; ${animStyle}; background: var(--card-bg); border-radius: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-shrink: 0;">
                 <button class="btn-icon-edit" onclick="ubahThnGaji(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                <h2 onclick="bukaYearPickerGaji()" style="margin:0; cursor:pointer;">${thn} <i class="fa-solid fa-caret-down" style="font-size:12px;"></i></h2>
+                <h2 onclick="bukaYearPickerGaji()" style="margin:0; cursor:pointer; color: var(--text-primary); font-size: 18px;">${thn} <i class="fa-solid fa-caret-down" style="font-size:12px;"></i></h2>
                 <button class="btn-icon-edit" onclick="ubahThnGaji(1)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <div class="grid-picker">
-                ${namaBulanGaji.map((b, i) => `<div class="grid-item ${blnAktif === i ? 'active' : ''}" onclick="setBlnGaji(${i})" style="padding: 12px 0;">${b.substring(0,3)}</div>`).join('')}
+            <div class="grid-picker" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex-grow: 1; align-content: center;">
+                ${namaBulanGaji.map((b, i) => `
+                    <div class="grid-item ${blnAktif === i ? 'active' : ''}" 
+                         onclick="setBlnGaji(${i})" style="padding: 12px 0; text-align: center; border-radius: 8px;">${b.substring(0,3)}</div>
+                `).join('')}
             </div>
-            <div style="text-align: center; margin-top: 20px;"><button class="btn-text-batal" onclick="document.getElementById('pickerMYGaji').style.display='none'">BATAL</button></div>
-        </div>`;
+            <div style="text-align: center; margin-top: auto; flex-shrink: 0; padding-top: 15px;">
+                <button class="btn-text-batal" onclick="tutupPickerBulanGaji()" style="width: 100%; border: none; background: transparent; color: #FF3B30; font-weight: 700; padding: 10px; font-size: 16px;">BATAL</button>
+            </div>
+        </div>
+    `;
+}
+
+function tutupPickerBulanGaji() {
+    if (history.state && history.state.id === 'pickerBulanGaji') {
+        history.back();
+    } else {
+        const p = document.getElementById('pickerMYGaji');
+        if(p) p.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackPickerBulanGaji);
+    }
 }
 
 function setBlnGaji(i) {
     tempPeriodeDateGaji.setMonth(i);
     document.getElementById('inputPeriodeGaji').value = namaBulanGaji[i] + " " + tempPeriodeDateGaji.getFullYear();
-    document.getElementById('pickerMYGaji').style.display = 'none';
+    tutupPickerBulanGaji(); // Mundur 1 step secara aman
     const resArea = document.getElementById('areaHasilGaji');
     if(resArea) resArea.classList.remove('show');
 }
 
 function ubahThnGaji(v, isYearOnly = false) {
     tempPeriodeDateGaji.setFullYear(tempPeriodeDateGaji.getFullYear() + v);
-    if(isYearOnly) renderYearPickerGajiInner(false); else renderPickerMYGajiInner(false);
+    if(isYearOnly) renderYearPickerGajiInner(false); 
+    else renderPickerMYGajiInner(false);
 }
 
-function setThnGaji(y) {
-    tempPeriodeDateGaji.setFullYear(y);
-    if(document.getElementById('pickerYearOnlyGaji')) document.getElementById('pickerYearOnlyGaji').style.display = 'none';
-    renderPickerMYGajiInner(false);
-}
-
+// --- PICKER TAHUN ---
 function bukaYearPickerGaji() {
     let yrPicker = document.getElementById('pickerYearOnlyGaji');
     if (!yrPicker) {
         yrPicker = document.createElement('div');
         yrPicker.id = 'pickerYearOnlyGaji';
         yrPicker.className = 'ios-overlay';
-        yrPicker.style.zIndex = '27000';
+        yrPicker.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 27000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);`;
         document.body.appendChild(yrPicker);
     }
     renderYearPickerGajiInner(true);
     yrPicker.style.display = 'flex';
+
+    // --- STEP NAVIGATION LOGIC (Level 3) ---
+    const baseLvl = (history.state && history.state.level) ? history.state.level : 10;
+    const myLvl = baseLvl + 1;
+    history.pushState({ id: 'pickerTahunGaji', level: myLvl }, '', '');
+
+    window.handleBackPickerTahunGaji = function(e) {
+        const currentLvl = e.state ? (e.state.level || 0) : 0;
+        if (currentLvl < myLvl) {
+            const y = document.getElementById('pickerYearOnlyGaji');
+            if (y) y.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackPickerTahunGaji);
+        }
+    };
+    window.addEventListener('popstate', window.handleBackPickerTahunGaji);
 }
 
 function renderYearPickerGajiInner(withAnim = false) {
     const startY = tempPeriodeDateGaji.getFullYear() - 4;
-    const endY = startY + 11;
+    const endY = startY + 11; // 12 Kotak
     let yearHtml = '';
     const animStyle = withAnim ? '' : 'animation: none !important; transition: none !important;';
+    
     for (let y = startY; y <= endY; y++) {
-        yearHtml += `<div class="grid-item ${y === tempPeriodeDateGaji.getFullYear() ? 'active' : ''}" onclick="setThnGaji(${y})" style="padding: 12px 0;">${y}</div>`;
+        yearHtml += `<div class="grid-item ${y === tempPeriodeDateGaji.getFullYear() ? 'active' : ''}" onclick="setThnGaji(${y})" style="padding: 12px 0; text-align: center; border-radius: 8px;">${y}</div>`;
     }
-    document.getElementById('pickerYearOnlyGaji').innerHTML = `
-        <div class="ios-modal-form profile-expand-anim" style="width: 300px; padding: 20px; ${animStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    
+    const yrPicker = document.getElementById('pickerYearOnlyGaji');
+    if(!yrPicker) return;
+
+    // KONSISTENSI: Width 320px, Height 380px, Grid 3 kolom
+    yrPicker.innerHTML = `
+        <div class="ios-modal-form profile-expand-anim" style="width: 320px; height: 380px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; ${animStyle}; background: var(--card-bg); border-radius: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-shrink: 0;">
                 <button class="btn-icon-edit" onclick="ubahThnGaji(-12, true)"><i class="fa-solid fa-chevron-left"></i></button>
-                <h2 style="margin:0; font-size: 18px;">Pilih Tahun</h2>
+                <h2 style="margin:0; font-size: 18px; color: var(--text-primary);">${startY} - ${endY}</h2>
                 <button class="btn-icon-edit" onclick="ubahThnGaji(12, true)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <div class="grid-picker">${yearHtml}</div>
-            <div style="text-align: center; margin-top: 20px;"><button class="btn-text-batal" onclick="document.getElementById('pickerYearOnlyGaji').style.display='none'">BATAL</button></div>
-        </div>`;
+            <div class="grid-picker" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex-grow: 1; align-content: center;">
+                ${yearHtml}
+            </div>
+            <div style="text-align: center; margin-top: auto; flex-shrink: 0; padding-top: 15px;">
+                <button class="btn-text-batal" onclick="tutupPickerTahunGaji()" style="width: 100%; border: none; background: transparent; color: #FF3B30; font-weight: 700; padding: 10px; font-size: 16px;">BATAL</button>
+            </div>
+        </div>
+    `;
 }
 
-function tutupMenuGaji() { document.getElementById('gajiModal').style.display = 'none'; }
+function tutupPickerTahunGaji() {
+    if (history.state && history.state.id === 'pickerTahunGaji') {
+        history.back();
+    } else {
+        const yrPicker = document.getElementById('pickerYearOnlyGaji');
+        if(yrPicker) yrPicker.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackPickerTahunGaji);
+    }
+}
+
+function setThnGaji(y) {
+    tempPeriodeDateGaji.setFullYear(y);
+    tutupPickerTahunGaji(); // Mundur 1 step (Tutup Tahun)
+    renderPickerMYGajiInner(false); // Refresh Bulan di bawahnya
+}
+
+function tutupMenuGaji() {
+    if (history.state && history.state.id === 'modalGaji') {
+        history.back(); // Trigger pembersihan lewat PopState
+    } else {
+        const modal = document.getElementById('gajiModal');
+        if (modal) modal.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackGaji);
+    }
+}

@@ -1,4 +1,4 @@
-// absen.js - Modul Popup Absensi (Clean Version & Fixed Date Logic)
+// absen.js - Modul Popup Absensi (Safe Navigation & Toast Version)
 
 function bukaMenuAbsen(event, editDate = null, editData = null, isPolisi = false) {
     if(event) event.preventDefault();
@@ -47,8 +47,7 @@ function bukaMenuAbsen(event, editDate = null, editData = null, isPolisi = false
                     </div>
                 </div>
                 
-                <div id="footerAbsen" class="ios-modal-footer-grid">
-                    </div>
+                <div id="footerAbsen" class="ios-modal-footer-grid"></div>
             </div>
         `;
         document.body.appendChild(modal);
@@ -57,20 +56,32 @@ function bukaMenuAbsen(event, editDate = null, editData = null, isPolisi = false
     resetFormAbsen();
     modal.style.display = 'flex';
 
-    // --- LOGIKA TOMBOL DINAMIS (POLISI vs NORMAL) ---
+    // --- LOGIKA TOMBOL DINAMIS ---
     const footer = document.getElementById('footerAbsen');
     if (isPolisi) {
-        // Tampilkan tombol Atur Nanti jika dihadang polisi
         footer.innerHTML = `
             <button class="btn-batal" onclick="aturNantiSemua()" style="color: #8E8E93 !important;">Atur Nanti</button>
             <button class="btn-simpan" style="background-color: #007AFF !important; color: #FFFFFF !important;" onclick="simpanAbsen(true)">Isi Absen</button>
         `;
     } else {
-        // Tampilkan tombol Batal normal
         footer.innerHTML = `
             <button class="btn-batal" onclick="tutupMenuAbsen()">Batal</button>
             <button class="btn-simpan" style="background-color: #007AFF !important; color: #FFFFFF !important;" onclick="simpanAbsen(false)">Simpan</button>
         `;
+
+        // --- BACK BUTTON HP SUPPORT (LEVEL 2) ---
+        // Kita beri level 2 agar tidak bentrok dengan dashboard (0) atau profil (1)
+        history.pushState({ id: 'modalAbsen', level: 2 }, '', ''); 
+        
+        const handlePopstateAbsen = (e) => {
+            if (!history.state || history.state.id !== 'modalAbsen') {
+                const m = document.getElementById('absenModal');
+                if (m) m.style.display = 'none';
+                if (typeof renderKalenderAbsen === 'function') renderKalenderAbsen();
+                window.removeEventListener('popstate', handlePopstateAbsen);
+            }
+        };
+        window.addEventListener('popstate', handlePopstateAbsen);
     }
 
     // FIX LOGIKA TANGGAL
@@ -85,8 +96,6 @@ function bukaMenuAbsen(event, editDate = null, editData = null, isPolisi = false
             document.querySelectorAll('#gridStatusAbsen .grid-item').forEach(item => {
                 if (item.innerText.trim() === editData.status) pilihGridAbsen(item, 'Status', editData.status);
             });
-        } else {
-            if (typeof applyLastAbsenChoice === 'function') applyLastAbsenChoice();
         }
     } else {
         document.getElementById('judulAbsen').innerText = "Absensi Harian";
@@ -100,9 +109,7 @@ function applyLastAbsenChoice() {
     if (lastKantor) {
         const items = document.querySelectorAll('#gridKantorAbsen .grid-item');
         items.forEach(item => {
-            if (item.innerText.trim() === lastKantor) {
-                pilihGridAbsen(item, 'Kantor', lastKantor);
-            }
+            if (item.innerText.trim() === lastKantor) pilihGridAbsen(item, 'Kantor', lastKantor);
         });
     }
 }
@@ -121,10 +128,17 @@ function pilihGridAbsen(elemen, tipe, nilai) {
 }
 
 function tutupMenuAbsen() {
-    document.getElementById('absenModal').style.display = 'none';
-    // Refresh otomatis tampilan kalender agar perubahan langsung terlihat
-    if (typeof renderKalenderAbsen === 'function') {
-        renderKalenderAbsen();
+    const modal = document.getElementById('absenModal');
+    if (modal && modal.style.display !== 'none') {
+        modal.style.display = 'none';
+        
+        // Refresh kalender
+        if (typeof renderKalenderAbsen === 'function') renderKalenderAbsen();
+
+        // Mundur satu langkah di history untuk hapus state modalAbsen
+        if (history.state && history.state.id === 'modalAbsen') {
+            history.back(); 
+        }
     }
 }
 
@@ -135,23 +149,22 @@ function resetFormAbsen() {
 }
 
 async function simpanAbsen(isPolisiMode = false) {
-    const tglFull = document.getElementById('inputTanggalAbsen').value; // Contoh: "Senin, 27 April 2026"
+    const tglFull = document.getElementById('inputTanggalAbsen').value; 
     const kntr = document.getElementById('inputKantorAbsen').value;
     const status = document.getElementById('inputStatusAbsen').value;
     
+    if (!kntr || !status) {
+        return IOSAlert.show("Data Kurang", "Pilih Lokasi Kantor dan Status Absensi.");
+    }
+
     const userAuth = firebase.auth().currentUser;
     if (!userAuth) return;
 
     const uid = userAuth.uid;
-
-    // --- 1. LOGIKA PATH FIRESTORE (DOKUMEN=BULAN, KOLEKSI=HARI) ---
-    // Pecah untuk mengambil Bulan_Tahun saja untuk nama DOCUMENT
     const tempArr = tglFull.split(', '); 
-    const tglMurni = tempArr[1] || tempArr[0]; // Ambil "27 April 2026"
+    const tglMurni = tempArr[1] || tempArr[0]; 
     const parts = tglMurni.split(" ");
-    const blnTahunId = parts[1] + "_" + parts[2]; // Hasil: "April_2026"
-
-    // Buat ID Koleksi dengan format: "Senin_27_April_2026"
+    const blnTahunId = parts[1] + "_" + parts[2]; 
     const dateId = tglFull.replace(', ', '_').replace(/\s/g, '_');
 
     const dataKehadiran = {
@@ -161,7 +174,6 @@ async function simpanAbsen(isPolisiMode = false) {
         waktu_input: firebase.firestore.FieldValue.serverTimestamp() 
     };
 
-    // JALUR FIRESTORE: data > UID > absen > April_2026 > Senin_27_April_2026 > harian
     const docRef = window.firestore
         .collection('data').doc(uid)
         .collection('absen').doc(blnTahunId)
@@ -170,42 +182,36 @@ async function simpanAbsen(isPolisiMode = false) {
     try {
         await docRef.set(dataKehadiran);
         
-        // Update LocalStorage agar kalender langsung berubah warnanya
+        // Update LocalStorage
         let localData = JSON.parse(localStorage.getItem('data_absen_current') || "{}");
         localData[dateId] = dataKehadiran;
         localStorage.setItem('data_absen_current', JSON.stringify(localData));
 
-        // --- 2. LOGIKA SETELAH SIMPAN (ANTREAN POLISI) ---
         if (isPolisiMode && window.antrianAbsenBolong && window.antrianAbsenBolong.length > 0) {
-            // Hapus tanggal yang baru saja diisi dari antrean
             window.antrianAbsenBolong.shift();
 
             if (window.antrianAbsenBolong.length > 0) {
-                // Masih ada yang bolong? Lanjut ke tanggal berikutnya
-                IOSAlert.show("Berhasil", "Absen " + tglFull + " tersimpan. Lanjut tanggal berikutnya...", {
+                // Mode Polisi: Pakai confirm karena harus lanjut ke antrian berikutnya
+                IOSAlert.show("Berhasil", "Absen " + tglFull + " tersimpan. Lanjut...", {
                     onConfirm: () => {
-                        if (typeof panggilModalAntrean === 'function') {
-                            panggilModalAntrean();
-                        }
+                        if (typeof panggilModalAntrean === 'function') panggilModalAntrean();
                     }
                 });
             } else {
-                // Semua hutang absen lunas
-                IOSAlert.show("Selesai", "Semua absen bolong sudah dilengkapi. Mantap!", {
+                IOSAlert.show("Selesai", "Semua absen bolong sudah dilengkapi!", {
                     onConfirm: () => {
-                        if (typeof tutupMenuAbsen === 'function') tutupMenuAbsen();
+                        document.getElementById('absenModal').style.display = 'none';
                         if (typeof renderKalenderAbsen === 'function') renderKalenderAbsen();
                     }
                 });
             }
         } else {
-            // Mode normal
-            IOSAlert.show("Berhasil", "Absen berhasil disimpan!", {
-                onConfirm: () => {
-                    if (typeof tutupMenuAbsen === 'function') tutupMenuAbsen();
-                    if (typeof renderKalenderAbsen === 'function') renderKalenderAbsen();
-                }
-            });
+            // --- MODE TOAST (NORMAL) ---
+            // 1. Munculkan Toast (Hilang sendiri 2 detik)
+            IOSAlert.show("Berhasil", "Absen berhasil disimpan!");
+            
+            // 2. Langsung tutup modal tanpa nunggu toast hilang
+            tutupMenuAbsen();
         }
     } catch (e) {
         console.error("Gagal simpan absen:", e);

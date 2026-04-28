@@ -13,7 +13,7 @@ function bukaMenuKerja(event) {
         modal.innerHTML = `
             <div class="ios-modal-form profile-expand-anim">
                 <div class="ios-modal-header">
-                    <h3>Input Pekerjaan</h3>
+                    <h3>INPUT PEKERJAAN</h3>
                 </div>
                 <div class="ios-modal-body">
                     <div class="input-group">
@@ -49,10 +49,6 @@ function bukaMenuKerja(event) {
                             <div class="grid-item" onclick="pilihGridKerja(this, 'durasi', '1')">1</div>
                             <div class="grid-item" onclick="pilihGridKerja(this, 'durasi', '1.5')">1.5</div>
                             <div class="grid-item" onclick="pilihGridKerja(this, 'durasi', '2')">2</div>
-                            <div class="grid-item" onclick="pilihGridKerja(this, 'durasi', '2.5')">2.5</div>
-                            <div class="grid-item" onclick="pilihGridKerja(this, 'durasi', '3')">3</div>
-                            <div class="grid-item" onclick="pilihGridKerja(this, 'durasi', '3.5')">3.5</div>
-                            <div class="grid-item" onclick="pilihGridKerja(this, 'durasi', '4')">4</div>
                         </div>
                         <input type="hidden" id="durasiJam">
                     </div>
@@ -72,11 +68,28 @@ function bukaMenuKerja(event) {
         document.body.appendChild(modal);
     }
     
-    const tglHariIni = typeof getTanggalHariIni === 'function' ? getTanggalHariIni() : "";
-    document.getElementById('tglKerja').value = getTanggalHariIni();
+    document.getElementById('tglKerja').value = typeof getTanggalHariIni === 'function' ? getTanggalHariIni() : "";
     
     modal.style.display = 'flex';
-    applyLastChoiceKerja(); 
+    if (typeof applyLastChoiceKerja === 'function') applyLastChoiceKerja(); 
+
+    // --- LOGIKA TOMBOL BACK HP (SISTEM LEVELING SINKRON DENGAN MAIN.JS) ---
+    const baseLvl = (history.state && history.state.level) ? history.state.level : 0;
+    const myLvl = baseLvl + 1; // Menetapkan kerja.js sebagai pondasi level
+    history.pushState({ id: 'modalKerja', level: myLvl }, '', ''); 
+    
+    window.handleBackKerja = function(e) {
+        const currentLvl = e.state ? (e.state.level || 0) : 0;
+        // Hanya tutup modal kerja jika history mundur ke bawah level pondasinya
+        if (currentLvl < myLvl) {
+            const m = document.getElementById('kerjaIosModal');
+            if (m) m.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackKerja);
+        }
+    };
+    
+    window.removeEventListener('popstate', window.handleBackKerja);
+    window.addEventListener('popstate', window.handleBackKerja);
 }
 
 function applyLastChoiceKerja() {
@@ -123,7 +136,7 @@ async function simpanDataKerja() {
     const treatment = document.getElementById('jenisTreatment').value;
     const durasi = document.getElementById('durasiJam').value;
     const kantor = document.getElementById('lokasiKantor').value;
-    const tanggalFull = document.getElementById('tglKerja').value; // Contoh: "Minggu, 26 April 2026"
+    const tanggalFull = document.getElementById('tglKerja').value; 
 
     const userAuth = firebase.auth().currentUser;
     if (!userAuth) return IOSAlert.show("Sesi Habis", "Silakan login kembali.");
@@ -134,20 +147,14 @@ async function simpanDataKerja() {
 
     const uid = userAuth.uid;
 
-    // --- 1. ID UNIK (BERDASARKAN TIMESTAMP) ---
     const kodeKntr = kantor === "FIVE STAR 1" ? "FS1" : "FS2";
     const customID = `${kodeKntr}${Date.now()}`;
 
-    // --- 2. LOGIKA PATH FIRESTORE (DOKUMEN=BULAN, KOLEKSI=HARI) ---
-    // Pecah untuk mengambil Bulan_Tahun saja untuk nama DOCUMENT
     const tempArr = tanggalFull.split(', '); 
-    const tglMurni = tempArr[1] || tempArr[0]; // Ambil "26 April 2026"
+    const tglMurni = tempArr[1] || tempArr[0]; 
     const parts = tglMurni.split(" ");
     
-    const blnTahunId = parts[1] + "_" + parts[2]; // Hasil: "April_2026"
-
-    // Buat ID Koleksi dengan format: "Minggu_26_April_2026"
-    // Kita ganti koma dan spasi menjadi underscore (_)
+    const blnTahunId = parts[1] + "_" + parts[2]; 
     const dateId = tanggalFull.replace(', ', '_').replace(/\s/g, '_');
 
     localStorage.setItem('last_kerja_tgl', tanggalFull);
@@ -164,7 +171,6 @@ async function simpanDataKerja() {
         detail_jam: { massage: 0, reflexy: 0 }
     };
 
-    // --- 3. LOGIKA HITUNG JAM (TETAP SAMA) ---
     const durasiNum = parseFloat(durasi);
     if (treatment === 'KOMBINASI') {
         if (durasiNum === 1) { data.detail_jam.massage = 0.5; data.detail_jam.reflexy = 0.5; }
@@ -177,24 +183,21 @@ async function simpanDataKerja() {
         data.detail_jam.reflexy = durasiNum;
     }
 
-    // --- 4. EKSEKUSI KE FIRESTORE ---
     if (window.firestore) {
-        // Struktur Jalur: data > UID > kerja > April_2026 > Minggu_26_April_2026 > ID_TRANS
         const docRef = window.firestore
             .collection('data').doc(uid)
-            .collection('kerja').doc(blnTahunId) // Folder Bulan
-            .collection(dateId).doc(customID);   // Folder Hari & Data
+            .collection('kerja').doc(blnTahunId) 
+            .collection(dateId).doc(customID);   
 
         try {
             await docRef.set(data);
-            IOSAlert.show("Berhasil", "Laporan kerja tersimpan! ID: " + customID, {
-                teksTombol: "Mantap",
-                onConfirm: () => {
-                    if (typeof resetFormSetelahSimpanKerja === 'function') {
-                        resetFormSetelahSimpanKerja();
-                    }
-                }
-            });
+            
+            IOSAlert.show("Berhasil", "Laporan kerja tersimpan! ID: " + customID);
+    
+            if (typeof resetFormSetelahSimpanKerja === 'function') {
+                resetFormSetelahSimpanKerja();
+            }
+    
         } catch (e) {
             IOSAlert.show("Gagal", "Firestore Error: " + e.message);
         }
@@ -216,5 +219,13 @@ function resetFormSetelahSimpanKerja() {
 
 function tutupPopupKerja() {
     const modal = document.getElementById('kerjaIosModal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.style.display = 'none';
+        
+        // Memastikan history.back terpanggil dengan bersih saat ditutup manual (sinkron dg ID)
+        if (history.state && history.state.id === 'modalKerja') {
+            history.back(); 
+        }
+        window.removeEventListener('popstate', window.handleBackKerja);
+    }
 }
