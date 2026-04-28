@@ -147,6 +147,7 @@ function gantiLayar(judul, htmlKonten, htmlFooter, animasikan = true) {
     const displayJudul = document.getElementById('judulPengaturan');
     if (displayJudul) displayJudul.innerText = judul;
     
+    // Hanya jalankan animasi jika animasikan bernilai true
     if (kotak && animasikan) {
         kotak.classList.remove('modal-zoom-linear');
         void kotak.offsetWidth; 
@@ -476,7 +477,7 @@ async function simpanPasswordFirebase() {
 
 // --- 7. TEMA & INFO (LEVEL 2) ---
 
-function renderTema(isBackNav = false) {
+function renderTema(isBackNav = false, withAnim = true) {
     window.currentActiveSubMenu = "tema";
     if (!isBackNav) {
         const baseLvl = (history.state && history.state.level) ? history.state.level : 11;
@@ -485,6 +486,8 @@ function renderTema(isBackNav = false) {
     window.currentSettingsLevel = 2;
     const theme = localStorage.getItem('app-theme') || 'auto';
     const check = (m) => theme === m ? '<i class="fa-solid fa-check" style="color:#007AFF;"></i>' : '';
+    
+    // withAnim dikirim ke gantiLayar
     gantiLayar('Mode Tema', `
         <div class="fixed-height-skeleton">
             <div class="list-group-ios">
@@ -493,7 +496,7 @@ function renderTema(isBackNav = false) {
                 <div onclick="setModeTema('auto')" style="${listStyleLast}"><span>Otomatis (Sistem)</span> ${check('auto')}</div>
             </div>
         </div>
-    `, `<button class="btn-batal btn-footer-center" onclick="history.back()">Kembali</button>`, true);
+    `, `<button class="btn-batal btn-footer-center" onclick="history.back()">Kembali</button>`, withAnim);
 }
 
 function setModeTema(mode) {
@@ -502,7 +505,9 @@ function setModeTema(mode) {
     const isDark = mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.classList.toggle('dark-theme', isDark);
     if (document.body) document.body.classList.toggle('dark-theme', isDark);
-    renderTema(true);
+    
+    // FIXED: Panggil renderTema dengan withAnim = false
+    renderTema(true, false);
 }
 
 function renderInformasiAplikasi(isBackNav = false) {
@@ -547,8 +552,11 @@ function prosesLogout() {
         teksBatal: "Batal", teksTombol: "Keluar",
         onConfirm: () => {
             firebase.auth().signOut().then(() => {
+                // Hanya hapus status login dan tipe login
                 localStorage.removeItem('isLoggedIn');
                 localStorage.removeItem('loginType');
+                
+                // JANGAN gunakan localStorage.clear() agar nama dan foto tidak hilang
                 window.location.replace('index.html');
             });
         }
