@@ -45,12 +45,12 @@ if (!document.getElementById('profil-custom-style')) {
             flex-shrink: 0;
         }
         .profil-avatar-wrapper {
-            width: 90px;
-            height: 90px;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
             border: 4px solid var(--card-bg);
             background: var(--card-bg);
-            margin: -45px auto 0;
+            margin: -85px auto 0;
             position: relative;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             display: flex;
@@ -188,8 +188,7 @@ function pemicuPilihFoto() {
     
     // Gunakan ID checking yang tahan terhadap tumpukan modal baru
     window.handleBackActionSheet = function(e) {
-        const state = e.state;
-        if (!state || state.id === 'modalProfil') {
+        if (!e.state || e.state.id === 'modalProfil') {
             const a = document.getElementById('actionSheetFoto');
             if (a) a.style.display = 'none';
             window.removeEventListener('popstate', window.handleBackActionSheet);
@@ -199,12 +198,10 @@ function pemicuPilihFoto() {
 }
 
 function tutupActionSheet() { 
-    if (history.state && history.state.id === 'actionSheetFoto') {
-        history.back(); 
-    } else {
+    if (history.state && history.state.id === 'actionSheetFoto') history.back();
+    else {
         const a = document.getElementById('actionSheetFoto');
         if (a) a.style.display = 'none';
-        window.removeEventListener('popstate', window.handleBackActionSheet);
     }
 }
 
@@ -254,7 +251,7 @@ function bukaPopupProfil(event) {
                             <img src="${f}" alt="Profile" id="fotoProfilUtama" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
                         <input type="file" id="inputFotoProfil" accept="image/*" style="display:none" onchange="bukaEditorCrop(this)">
-                        <button onclick="pemicuPilihFoto()" style="position: absolute; bottom: 0; right: calc(50% - 45px); width: 32px; height: 32px; border-radius: 50%; background: #007AFF; color: white; border: 2px solid var(--card-bg); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                        <button onclick="pemicuPilihFoto()" style="position: absolute; bottom: 0; right: calc(50% - 60px); width: 32px; height: 32px; border-radius: 50%; background: #007AFF; color: white; border: 2px solid var(--card-bg); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
                             <i class="fa-solid fa-camera" style="font-size: 13px;"></i>
                         </button>
                     </div>
@@ -319,13 +316,15 @@ function bukaPopupProfil(event) {
 
     history.pushState({ id: 'modalProfil' }, '', '');
     
-    // Hanya tertutup jika history benar-benar kosong (Dashboard)
+    // SATPAM NAVIGASI (Hanya tutup jika kembali ke Dashboard)
     window.handleBackProfil = function(e) {
         const state = e.state;
-        if (!state) {
+        if (!state || state.id === 'dashboardRoot') {
             const m = document.getElementById('profileIosModal');
-            if (m) m.style.display = 'none';
-            window.removeEventListener('popstate', window.handleBackProfil);
+            if (m && m.style.display === 'flex') {
+                m.style.display = 'none';
+                window.removeEventListener('popstate', window.handleBackProfil);
+            }
         }
     };
     window.removeEventListener('popstate', window.handleBackProfil);
@@ -333,12 +332,10 @@ function bukaPopupProfil(event) {
 }
 
 function tutupPopupProfil() {
-    if (history.state && history.state.id === 'modalProfil') {
-        history.back();
-    } else {
+    if (history.state && history.state.id === 'modalProfil') history.back();
+    else {
         const modal = document.getElementById('profileIosModal');
         if (modal) modal.style.display = 'none';
-        window.removeEventListener('popstate', window.handleBackProfil);
     }
 }
 
@@ -386,10 +383,8 @@ function bukaEditorCrop(input) {
             cropModal.style.display = 'flex';
 
             history.pushState({ id: 'cropEditor' }, '', '');
-            
             window.handleBackCrop = function(e) {
-                const state = e.state;
-                if (!state || state.id === 'modalProfil') {
+                if (!e.state || e.state.id === 'modalProfil') {
                     const c = document.getElementById('cropModalWA');
                     if (c) c.style.display = 'none';
                     window.removeEventListener('popstate', window.handleBackCrop);
@@ -497,12 +492,10 @@ function terapkanCrop() {
 
 function tutupEditorCrop() {
     document.getElementById('inputFotoProfil').value = "";
-    if (history.state && history.state.id === 'cropEditor') {
-        history.back();
-    } else {
+    if (history.state && history.state.id === 'cropEditor') history.back();
+    else {
         const m = document.getElementById('cropModalWA'); 
         if(m) m.style.display = 'none';
-        window.removeEventListener('popstate', window.handleBackCrop);
     }
 }
 
@@ -523,8 +516,7 @@ function bukaFotoFull(url) {
     history.pushState({ id: 'fotoFull' }, '', '');
     
     window.handleBackFotoFull = function(e) {
-        const state = e.state;
-        if (!state || state.id === 'modalProfil') {
+        if (!e.state || e.state.id === 'modalProfil') {
             const f = document.getElementById('fotoFullModal');
             if (f) f.style.display = 'none';
             window.removeEventListener('popstate', window.handleBackFotoFull);
@@ -534,11 +526,9 @@ function bukaFotoFull(url) {
 }
 
 function tutupFotoFull() {
-    if (history.state && history.state.id === 'fotoFull') {
-        history.back();
-    } else {
+    if (history.state && history.state.id === 'fotoFull') history.back();
+    else {
         const f = document.getElementById('fotoFullModal');
         if (f) f.style.display = 'none';
-        window.removeEventListener('popstate', window.handleBackFotoFull);
     }
 }

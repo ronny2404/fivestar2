@@ -58,7 +58,7 @@ function bukaPengaturan() {
         modal = document.createElement('div');
         modal.id = 'pengaturanModal';
         modal.className = 'ios-overlay';
-        modal.style.zIndex = '22000';
+        modal.style.zIndex = '25000';
         
         modal.innerHTML = `
             <div id="kotakLengkungPengaturan" class="ios-modal-form modal-zoom-linear" style="width: 340px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg); border-radius: 20px;">
@@ -73,62 +73,64 @@ function bukaPengaturan() {
     }
     modal.style.display = 'flex';
     
-    window.currentSettingsLevel = 1;
-    renderMenuPengaturan(false); 
+    // 1. Dorong state baru (Level 1: Pengaturan Utama)
+    history.pushState({ id: 'pengaturan_main', menu: 'main' }, '', '');
 
+    // 2. Gunakan listener agar tidak menimpa modul lain
     window.removeEventListener('popstate', handleBackSmartPengaturan);
     window.addEventListener('popstate', handleBackSmartPengaturan);
+
+    renderMenuPengaturan(true);
 }
 
-// --- LOGIKA HISTORY TARGETED ID (FIXED: Anti Mental & Anti Re-render dari Kalender) ---
+// Handler Navigasi khusus Pengaturan
 function handleBackSmartPengaturan(e) {
     const modal = document.getElementById('pengaturanModal');
     if (!modal || modal.style.display === 'none') return;
 
     const state = e.state;
-    const currentLvl = state ? (state.level || 0) : 0;
 
-    // 1. Kapan Modal Pengaturan Boleh TUTUP?
-    // Modal HANYA tutup jika kita kembali ke Dashboard (null) atau Profil.
-    // Kita abaikan ID asing (seperti picker bulan/tahun) selama levelnya masih tinggi.
-    if (!state || state.id === 'modalProfil') {
+    // Abaikan state dari picker kalender agar tidak mengganggu layar Pengaturan
+    if (state && (state.id === 'kalender_modal' || state.id === 'pickerTahun' || state.id === 'pickerTahunAbsen' || state.id === 'pickerTahunGaji')) {
+        return; 
+    }
+
+    // Jika kembali ke Dashboard atau modal profil, tutup pengaturan
+    if (!state || state.id === 'modalProfil' || state.id === 'dashboardRoot') {
         modal.style.display = 'none';
-        window.currentSettingsLevel = 0;
-        window.currentActiveSubMenu = "";
-        eksekusiRefreshSetelahTutup();
         window.removeEventListener('popstate', handleBackSmartPengaturan);
+        eksekusiRefreshSetelahTutup();
         return;
     }
 
-    // 2. Navigasi Internal Pengaturan
-    if (state.id && state.id.startsWith('pengaturan_')) {
-        
-        // Proteksi agar tidak re-render saat cuma pilih tanggal di Kalender
-        const targetMenu = state.menu || "main";
-        if (targetMenu === window.currentActiveSubMenu) return; 
-
-        if (state.id === 'pengaturan_main') {
-            window.currentSettingsLevel = 1;
-            renderMenuPengaturan(true); 
-        } else if (state.id === 'pengaturan_sub') {
-            window.currentSettingsLevel = 2;
-            if (state.menu === 'akun') renderSubMenuAkun(true);
-            else if (state.menu === 'datadiri') renderDataDiri(true);
+    // Navigasi Internal Pengaturan (Anti-Blink & Anti-Reload)
+    // Pastikan hanya me-render ulang jika menu yang dituju BERBEDA dengan menu yang sedang aktif
+    if (state.id === 'pengaturan_main') {
+        if (window.currentActiveSubMenu !== 'main') {
+            renderMenuPengaturan(true);
+        }
+    } else if (state.id === 'pengaturan_sub') {
+        if (window.currentActiveSubMenu !== state.menu) {
+            if (state.menu === 'datadiri') renderDataDiri(true);
+            else if (state.menu === 'akun') renderSubMenuAkun(true);
             else if (state.menu === 'tema') renderTema(true);
             else if (state.menu === 'info') renderInformasiAplikasi(true);
-        } else if (state.id === 'pengaturan_form') {
-            window.currentSettingsLevel = 3;
+        }
+    } else if (state.id === 'pengaturan_form') {
+        if (window.currentActiveSubMenu !== state.menu) {
+            if (state.menu === 'form_user') renderGantiUsername(document.getElementById('setNewUser') ? document.getElementById('setNewUser').value : '');
+            else if (state.menu === 'form_email') renderGantiEmail();
+            else if (state.menu === 'form_pass') renderPengaturanPassword("Ubah Kata Sandi");
+            else if (state.menu === 'form_hapus') renderHapusAkun();
         }
     }
 }
 
 function tutupPengaturan() {
-    if (history.state && history.state.id && history.state.id.startsWith('pengaturan_')) {
-        if (window.currentSettingsLevel === 1) history.back();
-        else if (window.currentSettingsLevel === 2) history.go(-2);
-        else if (window.currentSettingsLevel === 3) history.go(-3);
+    const modal = document.getElementById('pengaturanModal');
+    if (history.state && history.state.id && history.state.id.startsWith('pengaturan')) {
+        history.back();
     } else {
-        const modal = document.getElementById('pengaturanModal');
         if (modal) modal.style.display = 'none';
         window.removeEventListener('popstate', handleBackSmartPengaturan);
         eksekusiRefreshSetelahTutup();
@@ -147,7 +149,6 @@ function gantiLayar(judul, htmlKonten, htmlFooter, animasikan = true) {
     const displayJudul = document.getElementById('judulPengaturan');
     if (displayJudul) displayJudul.innerText = judul;
     
-    // Hanya jalankan animasi jika animasikan bernilai true
     if (kotak && animasikan) {
         kotak.classList.remove('modal-zoom-linear');
         void kotak.offsetWidth; 
@@ -161,18 +162,15 @@ function gantiLayar(judul, htmlKonten, htmlFooter, animasikan = true) {
 }
 
 // --- 2. STYLES UI COMPONENTS ---
-
 const listStyle = "display: flex; justify-content: space-between; align-items: center; padding: 16px 15px; border-bottom: 0.5px solid rgba(142,142,147,0.2); cursor: pointer; color: var(--text-primary); font-size: 15px; font-weight: 600;";
 const listStyleLast = "display: flex; justify-content: space-between; align-items: center; padding: 16px 15px; cursor: pointer; color: var(--text-primary); font-size: 15px; font-weight: 600;";
 const iconStyle = "color: #C4C4C6; font-size: 14px;"; 
 
 // --- 3. MENU UTAMA (LEVEL 1) ---
-
 function renderMenuPengaturan(isBackNav = false) {
     window.currentActiveSubMenu = "main";
     if (!isBackNav) {
-        const baseLvl = (history.state && history.state.level) ? history.state.level : 10;
-        history.pushState({ id: 'pengaturan_main', menu: 'main', level: baseLvl + 1 }, '', '');
+        history.pushState({ id: 'pengaturan_main', menu: 'main' }, '', '');
     }
     
     const htmlKonten = `
@@ -218,12 +216,10 @@ function renderMenuPengaturan(isBackNav = false) {
 }
 
 // --- 4. DATA DIRI (LEVEL 2) ---
-
 async function renderDataDiri(isBackNav = false) {
     window.currentActiveSubMenu = "datadiri";
     if (!isBackNav) {
-        const baseLvl = (history.state && history.state.level) ? history.state.level : 11;
-        history.pushState({ id: 'pengaturan_sub', menu: 'datadiri', level: baseLvl + 1 }, '', '');
+        history.pushState({ id: 'pengaturan_sub', menu: 'datadiri' }, '', '');
     }
     window.currentSettingsLevel = 2;
 
@@ -291,6 +287,7 @@ async function simpanDataDiri() {
     const userAuth = firebase.auth().currentUser;
     const btnSimpan = document.getElementById('btnSimpanData');
     if (btnSimpan) btnSimpan.innerText = "Menyimpan...";
+    
     const updateData = {
         nama: document.getElementById('setDataNama').value,
         tgl_lahir: document.getElementById('setDataDob').value,
@@ -299,9 +296,16 @@ async function simpanDataDiri() {
         alamat: document.getElementById('setDataAlamat').value,
         terakhir_update: new Date().toISOString()
     };
+    
     try {
         await window.db.ref(userAuth.uid).update(updateData);
+        
+        // Update LocalStorage agar Dashboard & Header Langsung sinkron
         localStorage.setItem('nama_user', updateData.nama);
+        const profilLokal = JSON.parse(localStorage.getItem('user_profile') || '{}');
+        Object.assign(profilLokal, updateData);
+        localStorage.setItem('user_profile', JSON.stringify(profilLokal));
+        
         IOSAlert.show("Berhasil", "Data diri diperbarui.", { onConfirm: () => history.back() });
     } catch (e) { 
         if (btnSimpan) btnSimpan.innerText = "Simpan";
@@ -310,16 +314,15 @@ async function simpanDataDiri() {
 }
 
 // --- 5. PENGATURAN AKUN (LEVEL 2) ---
-
 async function renderSubMenuAkun(isBackNav = false) {
     window.currentActiveSubMenu = "akun";
     if (!isBackNav) {
-        const baseLvl = (history.state && history.state.level) ? history.state.level : 11;
-        history.pushState({ id: 'pengaturan_sub', menu: 'akun', level: baseLvl + 1 }, '', '');
+        history.pushState({ id: 'pengaturan_sub', menu: 'akun' }, '', '');
     }
     window.currentSettingsLevel = 2;
     const userAuth = firebase.auth().currentUser;
     if (!userAuth) return;
+    
     const htmlKonten = `
         <div class="fixed-height-skeleton">
             <div class="list-group-ios" style="margin-bottom: 25px;">
@@ -345,20 +348,23 @@ async function renderSubMenuAkun(isBackNav = false) {
                     <i class="fa-solid fa-chevron-right" style="${iconStyle}"></i>
                 </div>
             </div>
-            <button onclick="renderHapusAkun()" style="width: 100%; padding: 15px; border-radius: 12px; background: rgba(255,59,48,0.1); color: #FF3B30; border: 1px solid rgba(255,59,48,0.2); font-weight: 600; font-size: 16px; cursor: pointer; margin-top: auto;">Hapus Akun Permanen</button>
+            <button onclick="renderHapusAkun()" style="width: 100%; padding: 15px; border-radius: 12px; background: rgba(255,59,48,0.1); color: #FF3B30; border: 1px solid rgba(255,59,48,0.2); font-weight: 600; font-size: 16px; cursor: margin-top: auto;">Hapus Akun Permanen</button>
         </div>
     `;
     gantiLayar('Pengaturan Akun', htmlKonten, `<button class="btn-batal btn-footer-center" onclick="history.back()">Kembali</button>`, true);
+    
     if (window.db) {
         try {
             const snap = await window.db.ref(userAuth.uid).once('value');
             const data = snap.val() || {};
             const currUser = data.username || localStorage.getItem('username') || 'user';
             const teksPass = data.password ? "Ubah Kata Sandi" : "Buat Kata Sandi";
+            
             const elU = document.getElementById('txtSetUser');
             if(elU) { elU.innerText = "@" + currUser; elU.classList.remove('text-loading'); }
             const elP = document.getElementById('txtSetPass');
             if(elP) { elP.innerText = teksPass; elP.classList.remove('text-loading'); }
+            
             document.getElementById('btnGoUsername').onclick = () => renderGantiUsername(currUser);
             document.getElementById('btnGoPass').onclick = () => renderPengaturanPassword(teksPass);
         } catch(e) { console.log(e); }
@@ -366,11 +372,9 @@ async function renderSubMenuAkun(isBackNav = false) {
 }
 
 // --- 6. FORMS (LEVEL 3) ---
-
 function renderGantiUsername(oldUser) {
     window.currentActiveSubMenu = "form_user";
-    const baseLvl = (history.state && history.state.level) ? history.state.level : 12;
-    history.pushState({ id: 'pengaturan_form', menu: 'form_user', level: baseLvl + 1 }, '', '');
+    history.pushState({ id: 'pengaturan_form', menu: 'form_user' }, '', '');
     window.currentSettingsLevel = 3;
     gantiLayar('Ganti Username', `
         <div class="fixed-height-skeleton">
@@ -396,8 +400,7 @@ async function simpanUsernameBaru() {
 
 function renderGantiEmail() {
     window.currentActiveSubMenu = "form_email";
-    const baseLvl = (history.state && history.state.level) ? history.state.level : 12;
-    history.pushState({ id: 'pengaturan_form', menu: 'form_email', level: baseLvl + 1 }, '', '');
+    history.pushState({ id: 'pengaturan_form', menu: 'form_email' }, '', '');
     window.currentSettingsLevel = 3;
     const userAuth = firebase.auth().currentUser;
     gantiLayar('Ganti Email', `
@@ -423,8 +426,7 @@ async function simpanEmailBaru() {
 
 function renderPengaturanPassword(judul) {
     window.currentActiveSubMenu = "form_pass";
-    const baseLvl = (history.state && history.state.level) ? history.state.level : 12;
-    history.pushState({ id: 'pengaturan_form', menu: 'form_pass', level: baseLvl + 1 }, '', '');
+    history.pushState({ id: 'pengaturan_form', menu: 'form_pass' }, '', '');
     window.currentSettingsLevel = 3;
     const isUbah = judul === 'Ubah Kata Sandi';
     let oldPassHtml = isUbah ? `<div class="input-group"><label>Sandi Lama</label><input type="password" id="setPassOld" class="custom-box-input"></div>` : '';
@@ -476,18 +478,15 @@ async function simpanPasswordFirebase() {
 }
 
 // --- 7. TEMA & INFO (LEVEL 2) ---
-
 function renderTema(isBackNav = false, withAnim = true) {
     window.currentActiveSubMenu = "tema";
     if (!isBackNav) {
-        const baseLvl = (history.state && history.state.level) ? history.state.level : 11;
-        history.pushState({ id: 'pengaturan_sub', menu: 'tema', level: baseLvl + 1 }, '', '');
+        history.pushState({ id: 'pengaturan_sub', menu: 'tema' }, '', '');
     }
     window.currentSettingsLevel = 2;
     const theme = localStorage.getItem('app-theme') || 'auto';
     const check = (m) => theme === m ? '<i class="fa-solid fa-check" style="color:#007AFF;"></i>' : '';
     
-    // withAnim dikirim ke gantiLayar
     gantiLayar('Mode Tema', `
         <div class="fixed-height-skeleton">
             <div class="list-group-ios">
@@ -505,16 +504,13 @@ function setModeTema(mode) {
     const isDark = mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.classList.toggle('dark-theme', isDark);
     if (document.body) document.body.classList.toggle('dark-theme', isDark);
-    
-    // FIXED: Panggil renderTema dengan withAnim = false
     renderTema(true, false);
 }
 
 function renderInformasiAplikasi(isBackNav = false) {
     window.currentActiveSubMenu = "info";
     if (!isBackNav) {
-        const baseLvl = (history.state && history.state.level) ? history.state.level : 11;
-        history.pushState({ id: 'pengaturan_sub', menu: 'info', level: baseLvl + 1 }, '', '');
+        history.pushState({ id: 'pengaturan_sub', menu: 'info' }, '', '');
     }
     window.currentSettingsLevel = 2;
     gantiLayar('Informasi Aplikasi', `
@@ -546,17 +542,13 @@ function bacaVersiDariSW() {
 }
 
 // --- 8. LOGOUT & DELETE (LEVEL 3) ---
-
 function prosesLogout() {
     IOSAlert.show("Keluar Sesi", "Yakin ingin keluar? Data tetap aman.", {
         teksBatal: "Batal", teksTombol: "Keluar",
         onConfirm: () => {
             firebase.auth().signOut().then(() => {
-                // Hanya hapus status login dan tipe login
                 localStorage.removeItem('isLoggedIn');
                 localStorage.removeItem('loginType');
-                
-                // JANGAN gunakan localStorage.clear() agar nama dan foto tidak hilang
                 window.location.replace('index.html');
             });
         }
@@ -565,8 +557,7 @@ function prosesLogout() {
 
 function renderHapusAkun() {
     window.currentActiveSubMenu = "form_hapus";
-    const baseLvl = (history.state && history.state.level) ? history.state.level : 12;
-    history.pushState({ id: 'pengaturan_form', menu: 'form_hapus', level: baseLvl + 1 }, '', '');
+    history.pushState({ id: 'pengaturan_form', menu: 'form_hapus' }, '', '');
     window.currentSettingsLevel = 3;
     gantiLayar('Konfirmasi Hapus', `
         <div class="fixed-height-skeleton">
