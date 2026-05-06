@@ -3,41 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FIVE STAR 2 - Gateway</title>
+    <title>Gateway - FIVE STAR 2</title>
     
     <meta name="theme-color" content="#007AFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="FIVE STAR 2">
-    
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="assets/icon-192.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
 
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script>
-        (function() {
-            function applyTheme() {
-                const savedTheme = localStorage.getItem('app-theme');
-                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const isDark = savedTheme === 'dark' || (!savedTheme && systemDark);
-                document.documentElement.classList.toggle('dark-theme', isDark);
-                if (document.body) { document.body.classList.toggle('dark-theme', isDark); }
-            }
-            applyTheme();
-            window.addEventListener('DOMContentLoaded', applyTheme);
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-                if (!localStorage.getItem('app-theme')) applyTheme();
-            });
-        })();
-    </script>
-    
     <style>
+        /* CSS INTERNAL: Memastikan loading super cepat tanpa menunggu main.css */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #F2F2F7; }
+        body.dark-theme { background: #000000; }
+        
         .loader-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 30000;
+            display: flex; justify-content: center; align-items: center; z-index: 30000;
         }
         .ios-spinner {
             width: 35px; height: 35px; border: 3px solid rgba(142, 142, 147, 0.2);
@@ -45,20 +26,57 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
+
+    <script>
+        // 1. TEMA INSTAN (Mencegah Layar Putih Berkedip)
+        (function() {
+            const savedTheme = localStorage.getItem('app-theme');
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme === 'dark' || (!savedTheme && systemDark);
+            if (isDark) {
+                document.documentElement.classList.add('dark-theme');
+                window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-theme'));
+            }
+        })();
+    </script>
 </head>
 <body>
-    <div id="splashScreen" class="loader-container"><div class="ios-spinner"></div></div>
-    <div id="app-root"></div>
+    
+    <div id="splashScreen" class="loader-container">
+        <div class="ios-spinner"></div>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
-
     <script src="js/core/firebase.js"></script>
-    <script src="js/core/main.js"></script>
-    <script src="js/auth/login.js"></script>
-    <script src="js/auth/register.js"></script>
     <script src="js/core/app.js"></script>
+
+    <script>
+        // ==========================================
+        // GATEWAY LOGIC - PENGHANCUR RIWAYAT
+        // ==========================================
+        document.addEventListener("DOMContentLoaded", function() {
+            const statusLokal = localStorage.getItem('isLoggedIn');
+            
+            // 1. CEK CEPAT: Jika memori lokal bilang false, langsung tendang ke Login (Tanpa nunggu Firebase)
+            if (statusLokal !== 'true') {
+                window.location.replace('login.html');
+                return;
+            }
+
+            // 2. CEK AKURAT: Pengecekan sesi ke server Firebase
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user && statusLokal === 'true') {
+                    // Valid! Ganti halaman ke Dashboard dan HAPUS index.html dari riwayat
+                    window.location.replace('dashboard.html');
+                } else {
+                    // Tidak valid! Bersihkan memori lalu ke Login
+                    localStorage.setItem('isLoggedIn', 'false');
+                    window.location.replace('login.html');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,17 @@
+🌟 FIVE STAR 2 - UPDATE LOG 🌟
+
+Halo Tim FIVE STAR! 
+Aplikasi telah diperbarui dengan berbagai fitur dan perbaikan terbaru untuk meningkatkan kenyamanan Anda:
+
+✨ FITUR BARU & PENINGKATAN:
+- Kalender Absen Presisi: Tampilan grid tanggal kini disempurnakan menjadi kotak 1:1 (persegi sempurna) di semua jenis layar HP. Lebih proporsional, rapi, dan mudah ditekan!
+- Smart Popup Pembaruan: Sistem kini mendeteksi versi baru secara otomatis dari file sistem dan menampilkan catatan rilis ini.
+- Menu Donasi (DANA): Menambahkan tombol "Dukung Pengembang (DANA)" dengan integrasi langsung ke dompet digital pada menu Pengaturan > Informasi Aplikasi.
+
+🔧 PERBAIKAN SISTEM (BUG FIXES):
+- Navigasi Smart Back (Anti-Tumpuk): Memperbaiki masalah layar yang tertutup semua saat menekan tombol "Back/Batal" setelah mengedit absen dari dalam menu Rincian Kalender. Sekarang navigasi berjalan sesuai lapisannya.
+- Border Status Absen: Garis tepi (border) pada kotak tanggal kalender kini tetap terlihat dengan jelas meskipun status absen memiliki warna latar hijau (Masuk) atau oranye (Telat/Izin).
+- Kestabilan UI & Animasi: Animasi popup (zoom) dan transisi navigasi antar menu dibuat jauh lebih mulus tanpa efek berkedip (anti-blink).
+
+Terima kasih telah menggunakan FIVE STAR 2. Semangat kerjanya! 🚀
+- Dikembangkan oleh: RONNY

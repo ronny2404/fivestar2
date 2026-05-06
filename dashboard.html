@@ -15,6 +15,14 @@
 <link rel="stylesheet" href="css/main.css">
 
 <script>
+    // SATPAM DASHBOARD - CEK SEBELUM HALAMAN DIMUAT
+(function() {
+        const status = localStorage.getItem('isLoggedIn');
+        // Jika di memori statusnya tidak true, langsung tendang balik ke login
+        if (status !== 'true') {
+            window.location.replace('login.html');
+        }
+    })();
 (function() {
     function applyTheme() {
         const savedTheme = localStorage.getItem('app-theme');
@@ -37,6 +45,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 <script src="js/core/firebase.js"></script>
 <script src="js/core/main.js"></script>
+<script src="js/core/app.js"></script>
 </head>
 <body>
 <div class="app-container">
@@ -80,13 +89,13 @@
         <a href="#" class="menu-card" onclick="bukaMenuGaji(event)">
             <i class="fa-solid fa-sack-dollar icon icon-gaji"></i><span class="menu-title">Gaji</span>
         </a>
-        <a href="#" class="menu-card" onclick="bukaMenuEdit(event)">
-            <i class="fa-solid fa-user-pen icon icon-edit"></i><span class="menu-title">Edit Data</span>
+        
+        <a href="#" class="menu-card" onclick="bukaMenuPengaturan(event)">
+            <i class="fa-solid fa-gear icon icon-pengaturan"></i><span class="menu-title">Pengaturan</span>
         </a>
-    </main>
+        </main>
 </div>
-
-<script src="js/core/app.js"></script>
+<script src="js/core/log.js"></script>
 <script src="js/user/profil.js"></script>
 <script src="js/user/pengaturan.js"></script>
 <script src="js/features/absen.js"></script>
@@ -96,45 +105,6 @@
 <script src="js/features/rincian.js"></script>
 <script src="js/features/gaji.js"></script>
 <script src="js/features/edit-data.js"></script>
-
-<script>
-    // 1. Inisialisasi awal: Dashboard harus punya ID agar modal tahu jalan pulang
-    history.replaceState({ id: 'dashboardRoot' }, '', '');
-
-    // 2. Satpam Navigasi: Menggunakan addEventListener agar tidak bentrok
-    window.addEventListener('popstate', function(e) {
-        const state = e.state;
-
-        // Daftar semua ID modal kamu
-        const daftarModal = [ 'profileIosModal', 'pengaturanModal', 'kerjaIosModal', 'absenModal', 'kalenderAbsenModal', 'kasbonIosModal', 'rincianModal', 'gajiModal', 'editDataModal', 'fotoFullModal', 'actionSheetFoto', 'cropModalWA'
-];
-
-        // Cek secara visual: Apakah ada modal yang sedang TERBUKA di layar?
-        let adaModalTampil = false;
-        daftarModal.forEach(id => {
-            const m = document.getElementById(id);
-            if (m && m.style.display === 'flex') adaModalTampil = true;
-        });
-
-        // LOGIKA KELUAR: Jika tidak ada modal buka dan kembali ke dashboardRoot
-        if (!adaModalTampil) {
-            if (!state || state.id === 'dashboardRoot') {
-                if (navigator.app) navigator.app.exitApp();
-                else window.location.replace('about:blank');
-            }
-        }
-    });
-
-    // Inisialisasi data seperti biasa
-    document.addEventListener('DOMContentLoaded', () => {
-        if (typeof muatDataHeader === 'function') muatDataHeader();
-        if (typeof muatFotoDashboard === 'function') muatFotoDashboard();
-        if (typeof updateWaktu === 'function') {
-            updateWaktu();
-            setInterval(updateWaktu, 1000);
-        }
-    });
-</script>
 
 </body>
 </html>
