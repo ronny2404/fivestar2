@@ -52,7 +52,10 @@ if (!document.getElementById('pengaturan-anim-style')) {
 window.currentSettingsLevel = 0; 
 window.currentActiveSubMenu = ""; 
 
-function bukaPengaturan() {
+// Fungsi Utama Panggilan dari Dashboard
+function bukaMenuPengaturan(event) {
+    if (event) event.preventDefault(); // Mencegah reload halaman
+    
     let modal = document.getElementById('pengaturanModal');
     if (!modal) {
         modal = document.createElement('div');
@@ -73,10 +76,16 @@ function bukaPengaturan() {
     }
     modal.style.display = 'flex';
     
-    // 1. Dorong state baru (Level 1: Pengaturan Utama)
+    // --- MANAJEMEN RIWAYAT (PENTING) ---
+    // Pastikan halaman dashboard saat ini memiliki 'identitas' agar kita tahu saat kembali
+    if (!history.state || history.state.id !== 'dashboardRoot') {
+        history.replaceState({ id: 'dashboardRoot' }, '', '');
+    }
+
+    // Dorong state baru untuk menu Pengaturan (Level 1)
     history.pushState({ id: 'pengaturan_main', menu: 'main' }, '', '');
 
-    // 2. Gunakan listener agar tidak menimpa modul lain
+    // Gunakan listener anti-duplikat
     window.removeEventListener('popstate', handleBackSmartPengaturan);
     window.addEventListener('popstate', handleBackSmartPengaturan);
 
@@ -90,13 +99,13 @@ function handleBackSmartPengaturan(e) {
 
     const state = e.state;
 
-    // Abaikan state dari picker kalender agar tidak mengganggu layar Pengaturan
+    // Abaikan state dari picker lain (jika sedang terbuka)
     if (state && (state.id === 'kalender_modal' || state.id === 'pickerTahun' || state.id === 'pickerTahunAbsen' || state.id === 'pickerTahunGaji')) {
         return; 
     }
 
-    // Jika kembali ke Dashboard atau modal profil, tutup pengaturan
-    if (!state || state.id === 'modalProfil' || state.id === 'dashboardRoot') {
+    // Jika user menekan BACK hingga state menjadi DashboardRoot atau null (batas aplikasi)
+    if (!state || state.id === 'dashboardRoot' || state.id === 'modalProfil') {
         modal.style.display = 'none';
         window.removeEventListener('popstate', handleBackSmartPengaturan);
         eksekusiRefreshSetelahTutup();
@@ -104,7 +113,6 @@ function handleBackSmartPengaturan(e) {
     }
 
     // Navigasi Internal Pengaturan (Anti-Blink & Anti-Reload)
-    // Pastikan hanya me-render ulang jika menu yang dituju BERBEDA dengan menu yang sedang aktif
     if (state.id === 'pengaturan_main') {
         if (window.currentActiveSubMenu !== 'main') {
             renderMenuPengaturan(true);
@@ -121,7 +129,7 @@ function handleBackSmartPengaturan(e) {
             if (state.menu === 'form_user') renderGantiUsername(document.getElementById('setNewUser') ? document.getElementById('setNewUser').value : '');
             else if (state.menu === 'form_email') renderGantiEmail();
             else if (state.menu === 'form_pass') renderPengaturanPassword("Ubah Kata Sandi");
-            else if (state.menu === 'form_hapus') renderHapusAkun();
+            else if (state.menu === 'form_hapus') renderHapusAkun(true);
         }
     }
 }
@@ -129,8 +137,10 @@ function handleBackSmartPengaturan(e) {
 function tutupPengaturan() {
     const modal = document.getElementById('pengaturanModal');
     if (history.state && history.state.id && history.state.id.startsWith('pengaturan')) {
+        // Jika masih di dalam menu pengaturan, panggil back HP saja
         history.back();
     } else {
+        // Jika sudah di akar, tutup manual
         if (modal) modal.style.display = 'none';
         window.removeEventListener('popstate', handleBackSmartPengaturan);
         eksekusiRefreshSetelahTutup();
@@ -300,7 +310,6 @@ async function simpanDataDiri() {
     try {
         await window.db.ref(userAuth.uid).update(updateData);
         
-        // Update LocalStorage agar Dashboard & Header Langsung sinkron
         localStorage.setItem('nama_user', updateData.nama);
         const profilLokal = JSON.parse(localStorage.getItem('user_profile') || '{}');
         Object.assign(profilLokal, updateData);
@@ -348,7 +357,7 @@ async function renderSubMenuAkun(isBackNav = false) {
                     <i class="fa-solid fa-chevron-right" style="${iconStyle}"></i>
                 </div>
             </div>
-            <button onclick="renderHapusAkun()" style="width: 100%; padding: 15px; border-radius: 12px; background: rgba(255,59,48,0.1); color: #FF3B30; border: 1px solid rgba(255,59,48,0.2); font-weight: 600; font-size: 16px; cursor: margin-top: auto;">Hapus Akun Permanen</button>
+            <button onclick="renderHapusAkun()" style="width: 100%; padding: 15px; border-radius: 12px; background: rgba(255,59,48,0.1); color: #FF3B30; border: 1px solid rgba(255,59,48,0.2); font-weight: 600; font-size: 16px; margin-top: auto;">Hapus Akun Permanen</button>
         </div>
     `;
     gantiLayar('Pengaturan Akun', htmlKonten, `<button class="btn-batal btn-footer-center" onclick="history.back()">Kembali</button>`, true);
@@ -517,17 +526,29 @@ function renderInformasiAplikasi(isBackNav = false) {
         <div class="fixed-height-skeleton">
             <div style="text-align: center; padding: 10px 0 20px;">
                 <div style="width: 80px; height: 80px; border-radius: 18px; overflow: hidden; margin: 0 auto 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: white;">
-                    <img src="assets/icon-192.png" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="assets/icon-1.png" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
                 <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: var(--text-primary);">FIVE STAR 2</h2>
                 <p id="teksVersiApp" style="font-size: 13px; color: #8E8E93; margin-top: 4px;">Memuat versi...</p>
             </div>
+            
             <div class="list-group-ios" style="margin-top: 10px; font-size: 14px;">
                 <div style="display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 0.5px solid rgba(142,142,147,0.2);"><span style="color: #8E8E93;">Pengembang</span><span style="font-weight: 600; color: var(--text-primary);">RONNY</span></div>
                 <div style="display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 0.5px solid rgba(142,142,147,0.2);"><span style="color: #8E8E93;">Storage</span><span style="font-weight: 600; color: var(--text-primary);">Firebase</span></div>
                 <div style="display: flex; justify-content: space-between; padding: 12px 15px;"><span style="color: #8E8E93;">Database</span><span style="font-weight: 600; color: #34C759;">Terhubung</span></div>
             </div>
-            <p style="text-align: center; font-size: 11px; color: #C4C4C6; margin-top: auto;">&copy; 2026 FIVE STAR Management.</p>
+
+            <div class="list-group-ios" style="margin-top: 5px;">
+                <div onclick="window.open('https://link.dana.id/minta?full_url=https://qr.dana.id/v1/281012012019022054429359', '_blank')" style="${listStyleLast}">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 28px; height: 28px; background: #118EEA; border-radius: 7px; display: flex; justify-content: center; align-items: center; color: white;"><i class="fa-solid fa-wallet"></i></div>
+                        <span style="color: #007AFF;">Dukung Pengembang (DANA)</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="${iconStyle}"></i>
+                </div>
+            </div>
+
+            <p style="text-align: center; font-size: 11px; color: var(--text-primary); margin-top: auto;">&copy; 2026 FIVE STAR Management.</p>
         </div>
     `, `<button class="btn-batal btn-footer-center" onclick="history.back()">Kembali</button>`, true);
     bacaVersiDariSW();
@@ -541,23 +562,30 @@ function bacaVersiDariSW() {
     }).catch(() => { if (document.getElementById('teksVersiApp')) document.getElementById('teksVersiApp').innerText = 'Versi Standard'; });
 }
 
-// --- 8. LOGOUT & DELETE (LEVEL 3) ---
+// --- 8. LOGOUT & HAPUS AKUN ---
 function prosesLogout() {
-    IOSAlert.show("Keluar Sesi", "Yakin ingin keluar? Data tetap aman.", {
-        teksBatal: "Batal", teksTombol: "Keluar",
+    IOSAlert.show("Keluar Akun", "Apakah Anda yakin ingin keluar?", {
+        teksBatal: "Batal",
+        teksTombol: "Keluar",
         onConfirm: () => {
             firebase.auth().signOut().then(() => {
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('loginType');
-                window.location.replace('index.html');
+                const theme = localStorage.getItem('app-theme');
+                localStorage.clear();
+                if (theme) localStorage.setItem('app-theme', theme);
+                localStorage.setItem('isLoggedIn', 'false');
+
+                // Menggunakan replace agar history dihancurkan (Kembali ke login)
+                window.location.replace('login.html');
             });
         }
     });
 }
 
-function renderHapusAkun() {
+function renderHapusAkun(isBackNav = false) {
     window.currentActiveSubMenu = "form_hapus";
-    history.pushState({ id: 'pengaturan_form', menu: 'form_hapus' }, '', '');
+    if (!isBackNav) {
+        history.pushState({ id: 'pengaturan_form', menu: 'form_hapus' }, '', '');
+    }
     window.currentSettingsLevel = 3;
     gantiLayar('Konfirmasi Hapus', `
         <div class="fixed-height-skeleton">
@@ -586,6 +614,8 @@ async function prosesHapusAkun() {
         await window.db.ref(userAuth.uid).remove();
         await userAuth.delete();
         localStorage.clear(); 
-        window.location.replace('index.html');
+        
+        // Pindah ke login setelah akun terhapus
+        window.location.replace('login.html');
     } catch (e) { btn.innerText = "Hapus"; IOSAlert.show("Gagal", "Sandi salah atau error sistem."); }
 }

@@ -303,7 +303,6 @@ function bukaPopupProfil(event) {
                     </div>
                     
                     <div style="margin-top: auto; padding: 15px 15px 0 15px; display: flex; flex-direction: column; gap: 10px;">
-                        <button onclick="bukaPengaturan()" style="width: 100%; padding: 14px; border-radius: 12px; background: var(--text-primary); color: var(--card-bg); font-weight: 700; border: none; font-size: 15px; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer;"><i class="fa-solid fa-gear"></i> Pengaturan Akun</button>
                         <button onclick="tutupPopupProfil()" style="width: 100%; padding: 14px; border-radius: 12px; background: transparent; color: #FF3B30; font-weight: 700; border: 1px solid rgba(255,59,48,0.2); font-size: 15px; cursor: pointer;">Tutup</button>
                     </div>
                 </div>
