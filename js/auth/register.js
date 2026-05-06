@@ -74,13 +74,6 @@ function inisialisasiRegister() {
                     <div class="input-group" style="margin-bottom: 25px;"><textarea id="regAlamat" placeholder="Alamat Lengkap" class="custom-box-input" rows="2" style="${inputStyle} resize: none;"></textarea></div>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="mundurStepManual()" style="${btnSecondaryStyle} flex: 1;">Kembali</button>
-                        <button id="btnFinishReg" onclick="prosesDaftar()" style="${btnPrimaryStyle} background: #34C759; flex: 1;">Daftar</button>
-                    </div>
-                </div>
-
-                <div style="text-align: center; font-size: 14px; margin-top: 30px;">
-                    <span style="color: #8E8E93;">Sudah punya akun?</span> 
-                    <a href="javascript:void(0);" onclick="kembaliKeLogin()" style="color: #007AFF; text-decoration: none; font-weight: 600;"> Masuk</a>
                 </div>
             </div>
         `;
