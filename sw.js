@@ -1,7 +1,7 @@
 // sw.js
 
 // SETIAP KALI UPDATE SKRIP, GANTI ANGKA DI BAWAH (misal 1.1 ke 1.2)
-const VERSION = '1.5'; 
+const VERSION = '1.6'; 
 const CACHE_NAME = `fs2-cache-${VERSION}`;
 
 // 1. Proses Install
