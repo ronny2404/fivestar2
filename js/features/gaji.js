@@ -1,4 +1,4 @@
-// gaji.js - Modul Slip Gaji (Firestore Parallel Architecture - FS1 & FS2 Split + Tier Bonus)
+// gaji.js - Modul Slip Gaji (UI Compact, Form Fixed, Detail Scrollable, No Footer)
 
 const namaBulanGaji = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
@@ -24,15 +24,37 @@ const TARIF = {
     // POTONGAN_IZIN dihitung prorata otomatis
 };
 
-// 1. CSS ANIMASI
+// 1. CSS ANIMASI & UX COMPACT
 if (!document.getElementById('gaji-result-style')) {
     const style = document.createElement('style');
     style.id = 'gaji-result-style';
     style.innerHTML = `
-        @keyframes staggeredFadeIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes staggeredFadeIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .data-item-animate { opacity: 0; animation: staggeredFadeIn 0.4s ease-out forwards; }
-        #areaHasilGaji { transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; max-height: 0; overflow: hidden; opacity: 0; display: block !important; }
-        #areaHasilGaji.show { max-height: 2500px; opacity: 1; }
+        
+        /* Custom Scrollbar iOS Style & Kunci Overscroll */
+        #areaHasilGaji {
+            transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+            max-height: 0; overflow-y: auto; opacity: 0; display: block !important;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        #areaHasilGaji.show { max-height: 3000px; opacity: 1; }
+        #areaHasilGaji::-webkit-scrollbar { width: 4px; }
+        #areaHasilGaji::-webkit-scrollbar-thumb { background: rgba(142,142,147,0.3); border-radius: 4px; }
+
+        /* UX FORM AGAR HEMAT TEMPAT & LABEL DI TENGAH TEBAL */
+        #gajiModal .input-group { margin-bottom: 12px !important; }
+        #gajiModal .input-group label { 
+            margin-bottom: 6px !important; 
+            font-size: 12px !important; 
+            font-weight: 900 !important; 
+            text-align: center !important; 
+            display: block !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px;
+            color: var(--text-primary) !important;
+        }
     `;
     document.head.appendChild(style);
 }
@@ -47,26 +69,32 @@ function bukaMenuGaji(event) {
         modal.id = 'gajiModal';
         modal.className = 'ios-overlay'; 
         modal.style.zIndex = '21000';
+        modal.style.overscrollBehavior = 'none'; // Kunci layar belakang
         
+        const inputStyle = "background: var(--bg-color); border: 2px solid transparent; padding: 12px; border-radius: 10px; width: 100%; box-sizing: border-box; outline: none; color: var(--text-primary); font-size: 14px; transition: 0.3s;";
+
         modal.innerHTML = `
-            <div class="ios-modal-form profile-expand-anim" style="width: 350px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg); border-radius: 20px;">
-                <div class="ios-modal-header" style="flex-shrink: 0; border-bottom: 0.5px solid rgba(142,142,147,0.2);">
-                    <h3 style="margin: 0; color: var(--text-primary);">SLIP GAJI</h3>
+            <div class="ios-modal-form profile-expand-anim" style="width: 100%; max-width: 100%; height: 100%; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg);">
+                
+                <div class="ios-modal-header" style="flex-shrink: 0; border-bottom: 0.5px solid rgba(142,142,147,0.2); padding-top: calc(10px + env(safe-area-inset-top)); padding-bottom: 10px;">
+                    <h3 style="margin: 0; color: var(--text-primary); font-size: 15px; text-align: center; width: 100%;">SLIP GAJI</h3>
                 </div>
-                <div class="ios-modal-body" style="padding: 0; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
-                    <div style="padding: 15px 20px 0 20px; flex-shrink: 0;">
+                
+                <div class="ios-modal-body" style="padding: 0; display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                    
+                    <div style="padding: 12px 15px 5px 15px; flex-shrink: 0; overflow: hidden; border-bottom: 1px dashed rgba(142,142,147,0.2);">
                         <div class="input-group">
                             <label>Periode Gaji</label>
-                            <input type="text" id="inputPeriodeGaji" readonly onclick="bukaPickerPeriodeGaji()" placeholder="Pilih Bulan & Tahun" style="cursor: pointer; font-weight: 600; text-align: center;">
+                            <input type="text" id="inputPeriodeGaji" readonly onclick="bukaPickerPeriodeGaji()" placeholder="Pilih Bulan & Tahun" class="custom-box-input" style="${inputStyle} cursor: pointer; font-weight: 600; text-align: center;">
                         </div>
-                        <button id="btnHitungGaji" onclick="prosesGaji()" class="btn-simpan" style="margin-top:15px; width:100%; border:none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; font-weight: bold; border-radius: 12px; background-color: #007AFF !important; color: #FFFFFF !important;">
+                        <button id="btnHitungGaji" onclick="prosesGaji()" class="btn-simpan" style="margin-top:2px; margin-bottom:10px; width:100%; border:none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; font-weight: bold; border-radius: 10px; background-color: #007AFF !important; color: #FFFFFF !important; font-size: 14px;">
                             <i class="fa-solid fa-calculator"></i> Hitung Gaji
                         </button>
                     </div>
 
-                    <div id="areaHasilGaji" style="padding: 0px 20px 20px 20px; overflow-y: auto; flex-grow: 1; text-align: left;">
+                    <div id="areaHasilGaji" style="padding: 0 15px calc(15px + env(safe-area-inset-bottom)) 15px; overflow-y: auto; flex: 1; background: rgba(142,142,147,0.03); text-align: left;">
                         
-                        <h4 style="margin: 20px 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase;">Pendapatan Five Star 1</h4>
+                        <h4 style="margin: 15px 0 8px 5px; font-size: 11px; color: #8E8E93; text-transform: uppercase;">Pendapatan Five Star 1</h4>
                         <div class="data-grid" style="margin-bottom: 16px;">
                             <div class="data-item data-item-animate" style="display: grid; grid-template-columns: 1fr 25px 80px; align-items: center; animation-delay: 0.1s;">
                                 <div style="display:flex; flex-direction:column;"><span style="color: var(--text-primary);">Reflexy FS 1</span><span style="font-size:11px; color:#8E8E93;" id="gjReflexyKetFS1">0 Jam</span></div>
@@ -166,16 +194,23 @@ function bukaMenuGaji(event) {
 
                     </div>
                 </div>
-                <div class="ios-modal-footer-grid" style="grid-template-columns: 1fr; border-top: 0.5px solid rgba(142,142,147,0.2);">
-                    <button class="btn-batal" onclick="tutupMenuGaji()" style="width: 100%; border: none; font-weight: 700; color: #007AFF !important; padding: 16px; background: transparent; font-size: 17px;">Tutup</button>
-                </div>
             </div>`;
         document.body.appendChild(modal);
+
+        // --- KUNCI MATI SCROLL IOS (HANYA IZINKAN DI LIST HASIL GAJI) ---
+        modal.addEventListener('touchmove', function(e) {
+            const listArea = document.getElementById('areaHasilGaji');
+            if (!listArea.contains(e.target)) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     }
     
     const d = new Date();
     document.getElementById('inputPeriodeGaji').value = namaBulanGaji[d.getMonth()] + " " + d.getFullYear();
     document.getElementById('areaHasilGaji').classList.remove('show');
+    
+    document.body.style.overflow = 'hidden';
     modal.style.display = 'flex';
     
     // --- LOGIKA SMART BACK BUTTON (LEVELING SINKRON DENGAN MAIN.JS) ---
@@ -188,6 +223,7 @@ function bukaMenuGaji(event) {
         if (currentLvl < myLvl) {
             const m = document.getElementById('gajiModal');
             if (m) m.style.display = 'none';
+            document.body.style.overflow = '';
             window.removeEventListener('popstate', window.handleBackGaji);
         }
     };
@@ -312,7 +348,6 @@ async function prosesGaji() {
             }
             if (totalBonusTotal === 0) statusBonusKet = "Tidak Capai Target";
         }
-
 
         // --- STEP G: KALKULASI AKHIR ---
         
@@ -572,6 +607,7 @@ function tutupMenuGaji() {
     } else {
         const modal = document.getElementById('gajiModal');
         if (modal) modal.style.display = 'none';
+        document.body.style.overflow = '';
         window.removeEventListener('popstate', window.handleBackGaji);
     }
 }
