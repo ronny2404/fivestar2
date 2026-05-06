@@ -4,44 +4,44 @@ window.currentKalenderDate = window.currentKalenderDate || new Date();
 window.cacheAbsenBulanIni = {}; 
 window.bulanIndo = window.bulanIndo || ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-// 1. INJEKSI CSS - KUNCIAN KOTAK 1:1 SEMPURNA DENGAN WRAPPER
+// 1. INJEKSI CSS - MENGGUNAKAN PREFIX 'abs-' AGAR TIDAK BENTROK DENGAN main.js
 let existingStyle = document.getElementById('kalender-css');
 if (existingStyle) {
-    existingStyle.remove(); // Hapus cache lama
+    existingStyle.remove(); 
 }
 
 const style = document.createElement('style');
 style.id = 'kalender-css';
 style.innerHTML = `
-    /* JURUS AMPUH KOTAK 1:1 (WRAPPER) */
-    .tgl-wrapper {
-        position: relative;
+    /* JURUS AMPUH KOTAK 1:1 (WRAPPER UNIK) */
+    .abs-tgl-wrapper {
+        position: relative !important;
         width: 100%;
         padding-bottom: 100%; /* Memaksa tinggi selalu sama persis dengan lebar */
     }
     
-    .tgl-item-global { 
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%; /* Mengisi penuh wadah 1:1 */
+    .abs-tgl-item { 
+        position: absolute !important;
+        top: 0; left: 0; width: 100%; height: 100%; 
         cursor: pointer; transition: transform 0.2s ease, background-color 0.2s ease;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         border-radius: 12px;
         font-size: 17px;
         font-weight: 700; color: var(--text-primary);
-        border: 1px solid rgba(142, 142, 147, 0.4); /* GARIS TEPI SELALU ADA */
+        border: 1px solid rgba(142, 142, 147, 0.4); 
         box-sizing: border-box;
         background: var(--bg-color);
     }
     
-    .tgl-item-global:active { transform: scale(0.9); }
-    .tgl-item-global.minggu { color: #FF3B30 !important; }
+    .abs-tgl-item:active { transform: scale(0.9); }
+    .abs-tgl-item.minggu { color: #FF3B30 !important; }
     
-    .tgl-item-global.today { 
-        border: 2px solid #007AFF !important; /* Timpa tebal untuk hari ini */
+    .abs-tgl-item.today { 
+        border: 2px solid #007AFF !important; 
         font-weight: 800;
     }
     
-    .tgl-item-global.disabled-day {
+    .abs-tgl-item.disabled-day {
         opacity: 0.35 !important;
         cursor: default;
         background: rgba(142,142,147,0.05);
@@ -49,20 +49,20 @@ style.innerHTML = `
         pointer-events: none;
     }
     
-    .grid-kalender-container { 
-        display: grid; 
-        grid-template-columns: repeat(7, 1fr); 
-        gap: 6px; /* Gap seragam di semua sisi */
+    .abs-grid-container { 
+        display: grid !important; 
+        grid-template-columns: repeat(7, 1fr) !important; 
+        gap: 6px; 
         padding: 5px 12px 20px 12px; 
         align-content: start; 
     }
     
-    .hari-header-kalender {
-        display: grid; 
-        grid-template-columns: repeat(7, 1fr); 
-        gap: 6px; /* Samakan dengan gap container bawah */
+    .abs-header-hari {
+        display: grid !important; 
+        grid-template-columns: repeat(7, 1fr) !important; 
+        gap: 6px; 
         text-align: center; 
-        padding: 10px 12px 12px 12px; /* Samakan dengan padding bawah */
+        padding: 10px 12px 12px 12px; 
         margin-bottom: 5px; 
         border-bottom: 0.5px solid rgba(142,142,147,0.3); 
         position: sticky; top: 0; background: var(--card-bg); z-index: 5;
@@ -100,7 +100,7 @@ window.bukaKalenderAbsen = function(event) {
                 </div>
 
                 <div class="ios-modal-body" id="scrollAreaKalenderAbsen" style="padding: 0 0 calc(20px + env(safe-area-inset-bottom)) 0; overflow-y: auto; flex-grow: 1; -webkit-overflow-scrolling: touch;">
-                    <div class="hari-header-kalender">
+                    <div class="abs-header-hari">
                         <div style="color:#FF3B30; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center;">MIN</div>
                         <div style="color:#8E8E93; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center;">SEN</div>
                         <div style="color:#8E8E93; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center;">SEL</div>
@@ -109,7 +109,7 @@ window.bukaKalenderAbsen = function(event) {
                         <div style="color:#8E8E93; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center;">JUM</div>
                         <div style="color:#8E8E93; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center;">SAB</div>
                     </div>
-                    <div id="gridBodyAbsen" class="grid-kalender-container"></div>
+                    <div id="gridBodyAbsen" class="abs-grid-container"></div>
                 </div>
             </div>`;
         document.body.appendChild(modal);
@@ -198,7 +198,7 @@ window.renderKalenderAbsen = async function() {
         const prevMonthDays = new Date(thn, bln, 0).getDate(); 
         for (let i = 0; i < firstDay; i++) { 
             const prevDayNum = prevMonthDays - (firstDay - 1) + i;
-            grid.innerHTML += `<div class="tgl-wrapper"><div class="tgl-item-global disabled-day" style="color: var(--text-primary);">${prevDayNum}</div></div>`; 
+            grid.innerHTML += `<div class="abs-tgl-wrapper"><div class="abs-tgl-item disabled-day" style="color: var(--text-primary);">${prevDayNum}</div></div>`; 
         }
 
         // 2. TANGGAL BULAN INI
@@ -209,7 +209,7 @@ window.renderKalenderAbsen = async function() {
             const isMinggu = curDateObj.getDay() === 0;
             const isToday = tglFull === todayStr;
 
-            let classes = "tgl-item-global"; 
+            let classes = "abs-tgl-item"; 
             if (isMinggu) classes += " minggu"; 
             if (isToday) classes += " today"; 
 
@@ -219,20 +219,18 @@ window.renderKalenderAbsen = async function() {
             if (dataDay) {
                 const s = dataDay.status;
                 const colors = { 'Masuk': '#34C759', 'Off': '#8E8E93', 'Libur': '#8E8E93', 'Telat': '#FF9500' };
-                // Kita HANYA mengubah warna background & text. 
-                // Border CSS class bawaan (1px solid rgba) dibiarkan tetap bekerja!
                 customStyle = `background-color: ${colors[s] || '#FF3B30'}; color: #FFFFFF !important;`;
                 statusText = `<span style="font-size:8px; font-weight:800; text-transform:uppercase; margin-top:2px;">${s.substring(0,10)}</span>`;
             }
             
-            grid.innerHTML += `<div class="tgl-wrapper"><div class="${classes}" style="${customStyle}" onclick="window.klikTglAbsen('${tglFull}')">${d}${statusText}</div></div>`;
+            grid.innerHTML += `<div class="abs-tgl-wrapper"><div class="${classes}" style="${customStyle}" onclick="window.klikTglAbsen('${tglFull}')">${d}${statusText}</div></div>`;
         }
 
         // 3. TANGGAL BULAN BERIKUTNYA
         const totalCellsSoFar = firstDay + daysInMonth;
         const remainingCells = (7 - (totalCellsSoFar % 7)) % 7;
         for (let i = 1; i <= remainingCells; i++) {
-            grid.innerHTML += `<div class="tgl-wrapper"><div class="tgl-item-global disabled-day" style="color: var(--text-primary);">${i}</div></div>`; 
+            grid.innerHTML += `<div class="abs-tgl-wrapper"><div class="abs-tgl-item disabled-day" style="color: var(--text-primary);">${i}</div></div>`; 
         }
 
     } catch (e) {
@@ -423,8 +421,8 @@ window.renderPickerMYInner = function(withAnim = false) {
                 <h2 onclick="window.bukaYearPickerAbsen()" style="margin:0; cursor:pointer; color: var(--text-primary); font-size: 18px;">${thn} <i class="fa-solid fa-caret-down" style="font-size:12px;"></i></h2>
                 <button class="btn-icon-edit" onclick="window.ubahThnAbsen(1)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <div class="grid-picker" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-content: center;">
-                ${window.bulanIndo.map((b, i) => `<div class="grid-item ${window.currentKalenderDate.getMonth() === i ? 'active' : ''}" onclick="window.setBlnAbsen(${i})" style="padding: 14px 0; text-align: center; border-radius: 8px; font-size: 14px; font-weight: 800;">${b.substring(0,3)}</div>`).join('')}
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-content: center;">
+                ${window.bulanIndo.map((b, i) => `<div class="grid-item ${window.currentKalenderDate.getMonth() === i ? 'active' : ''}" onclick="window.setBlnAbsen(${i})" style="padding: 14px 0; text-align: center; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer;">${b.substring(0,3)}</div>`).join('')}
             </div>
         </div>`;
 };
@@ -482,7 +480,7 @@ window.renderYearPickerInner = function(withAnim = false) {
     const animStyle = withAnim ? '' : 'animation: none !important; transition: none !important;';
     
     for (let y = startY; y <= endY; y++) { 
-        yearHtml += `<div class="grid-item ${y === window.currentKalenderDate.getFullYear() ? 'active' : ''}" onclick="window.setThnAbsen(${y})" style="padding: 14px 0; text-align: center; border-radius: 8px; font-size: 14px; font-weight: 800;">${y}</div>`; 
+        yearHtml += `<div class="grid-item ${y === window.currentKalenderDate.getFullYear() ? 'active' : ''}" onclick="window.setThnAbsen(${y})" style="padding: 14px 0; text-align: center; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer;">${y}</div>`; 
     }
     
     document.getElementById('pickerYearOnlyAbsen').innerHTML = `
@@ -492,7 +490,7 @@ window.renderYearPickerInner = function(withAnim = false) {
                 <h2 style="margin:0; font-size: 18px; color: var(--text-primary);">${startY} - ${endY}</h2>
                 <button class="btn-icon-edit" onclick="window.ubahThnAbsen(12, true)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <div class="grid-picker" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-content: center;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-content: center;">
                 ${yearHtml}
             </div>
         </div>`;
