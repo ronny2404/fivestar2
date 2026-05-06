@@ -31,9 +31,82 @@ function formatKeTanggalLengkap(dateObj) {
     return dateObj.toLocaleDateString('id-ID', opsi);
 }
 
+// INJEKSI CSS KHUSUS KALENDER VISUAL
+if (!document.getElementById('kalender-global-style')) {
+    const style = document.createElement('style');
+    style.id = 'kalender-global-style';
+    style.innerHTML = `
+        /* PERBAIKAN ALIGNMENT & BORDER KALENDER TIAP TANGGAL */
+        .grid-kalender-wrapper {
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            text-align: center;
+            gap: 8px 6px; 
+            padding-top: 5px;
+        }
+        .header-hari-wrapper {
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            text-align: center;
+            border-bottom: 0.5px solid rgba(142,142,147,0.3); 
+            padding-bottom: 12px;
+            margin-bottom: 5px;
+            position: sticky; top: 0; background: var(--card-bg); z-index: 5;
+        }
+        .header-hari-global {
+            font-size: 12px; font-weight: 700; color: #8E8E93; 
+            display: flex; justify-content: center; align-items: center;
+        }
+        .header-hari-global.minggu { color: #FF3B30; }
+        
+        .tgl-item-global {
+            display: flex; justify-content: center; align-items: center;
+            height: 38px; width: 38px; margin: 0 auto;
+            border-radius: 8px; 
+            border: 2px solid rgba(142, 142, 147, 0.4) !important; 
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            color: var(--text-primary); /* Menyesuaikan otomatis dengan tema */
+            box-sizing: border-box;
+            background: var(--bg-color);
+        }
+        .tgl-item-global:active { transform: scale(0.9); }
+        .tgl-item-global.disabled-day { 
+            color: #8E8E93 !important; 
+            opacity: 0.4; 
+            pointer-events: none; 
+            background: rgba(142,142,147,0.05); 
+            border: 1px dashed rgba(142, 142, 147, 0.2) !important; 
+        }
+        .tgl-item-global.today { 
+            color: #007AFF; 
+            font-weight: 800; 
+            border: 2px solid #007AFF !important; 
+        }
+        .tgl-item-global.selected { 
+            background: #007AFF !important; 
+            color: #FFFFFF !important; /* Warna putih agar selalu kontras di bg biru */
+            font-weight: 800; 
+            border-color: #007AFF !important; 
+            box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3);
+        }
+        
+        .pill-month-year {
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; 
+            padding: 6px 14px; border-radius: 20px; 
+            background: rgba(142,142,147,0.12);
+            transition: background 0.2s;
+            min-width: 140px; 
+        }
+        .pill-month-year:active { background: rgba(142,142,147,0.25); }
+    `;
+    document.head.appendChild(style);
+}
 
 // ==========================================
-// 1. PREMIUM VISUAL KALENDER GLOBAL (LEVEL 1) - ALIGNED WITH ABSEN
+// 1. PREMIUM VISUAL KALENDER GLOBAL (LEVEL 1)
 // ==========================================
 function bukaKalenderVisual(inputId) {
     targetInputId = inputId;
@@ -57,37 +130,38 @@ function bukaKalenderVisual(inputId) {
         modal.style.zIndex = '30000';
         
         modal.innerHTML = `
-            <div id="kotakLengkungKalenderGlobal" class="ios-modal-form profile-expand-anim" style="width: 360px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg); border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
+            <div id="kotakLengkungKalenderGlobal" class="ios-modal-form profile-expand-anim" style="width: 340px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg); border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
                 
-                <div class="ios-modal-header" style="display: flex; flex-direction: column; align-items: center; padding: 15px 15px 10px 15px; flex-shrink: 0; border-bottom: none;">
-                    <h2 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 800; color: var(--text-primary); letter-spacing: 1px;">PILIH TANGGAL</h2>
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <button onclick="ubahBulanGlobalHeader(-1)" style="background: transparent; border: none; color: #007AFF; font-size: 18px; cursor: pointer; padding: 5px 15px;"><i class="fa-solid fa-chevron-left"></i></button>
+                <div class="ios-modal-header" style="display: flex; flex-direction: column; align-items: center; padding: 20px 15px 15px 15px; flex-shrink: 0; border-bottom: none;">
+                    <h2 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 700; color: #8E8E93; letter-spacing: 1px; text-align: center; width: 100%;">PILIH TANGGAL</h2>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 5px;">
+                        <button onclick="ubahBulanGlobalHeader(-1)" style="background: transparent; border: none; color: #007AFF; font-size: 20px; cursor: pointer; padding: 5px; width: 40px; display: flex; justify-content: flex-start;"><i class="fa-solid fa-chevron-left"></i></button>
                         
-                        <div onclick="bukaBulanTahunPickerGlobal()" style="cursor:pointer; display:flex; align-items:center; gap:8px; padding: 6px 12px; border-radius: 8px; background: rgba(142,142,147,0.1);">
-                            <span id="txtDisplayBulanTahunGlobal" style="font-size:15px; font-weight: 700; color: var(--text-primary);">Memuat...</span>
-                            <i class="fa-solid fa-caret-down" style="font-size:12px; color: var(--text-primary);"></i>
+                        <div onclick="bukaBulanTahunPickerGlobal()" class="pill-month-year">
+                            <span id="txtDisplayBulanTahunGlobal" style="font-size:16px; font-weight: 700; color: var(--text-primary); text-align: center;">Memuat...</span>
+                            <i class="fa-solid fa-caret-down" style="font-size:12px; color: var(--text-primary); opacity: 0.7;"></i>
                         </div>
                         
-                        <button onclick="ubahBulanGlobalHeader(1)" style="background: transparent; border: none; color: #007AFF; font-size: 18px; cursor: pointer; padding: 5px 15px;"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button onclick="ubahBulanGlobalHeader(1)" style="background: transparent; border: none; color: #007AFF; font-size: 20px; cursor: pointer; padding: 5px; width: 40px; display: flex; justify-content: flex-end;"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
                 
-                <div class="ios-modal-body" style="padding: 10px; overflow-y: auto; flex-grow: 1;">
-                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding-bottom: 8px; border-bottom: 0.5px solid rgba(142,142,147,0.2); margin-bottom: 10px; position: sticky; top: 0; background: var(--card-bg); z-index: 5;">
-                        <div style="color:#FF3B30; font-size:13px; font-weight:800;">MIN</div>
-                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">SEN</div>
-                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">SEL</div>
-                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">RAB</div>
-                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">KAM</div>
-                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">JUM</div>
-                        <div style="opacity:0.5; font-size:13px; font-weight:800; color: var(--text-primary);">SAB</div>
+                <div class="ios-modal-body" id="kalenderScrollArea" style="padding: 0 15px 15px 15px; overflow-y: auto; flex-grow: 1;">
+                    <div class="header-hari-wrapper">
+                        <div class="header-hari-global minggu">MIN</div>
+                        <div class="header-hari-global">SEN</div>
+                        <div class="header-hari-global">SEL</div>
+                        <div class="header-hari-global">RAB</div>
+                        <div class="header-hari-global">KAM</div>
+                        <div class="header-hari-global">JUM</div>
+                        <div class="header-hari-global">SAB</div>
                     </div>
-                    <div id="gridBodyKalenderGlobal" class="grid-kalender-container" style="min-height: 310px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 0 13px 20px 13px; align-content: start;"></div>
+                    <div id="gridBodyKalenderGlobal" class="grid-kalender-wrapper" style="min-height: 250px; align-content: start;"></div>
                 </div>
 
                 <div class="ios-modal-footer" style="border-top: 0.5px solid rgba(142,142,147,0.2); flex-shrink: 0; padding: 0;">
-                    <button class="btn-batal" onclick="tutupKalenderVisual()" style="width: 100%; border: none; font-weight: 700; color: #007AFF !important; padding: 16px; text-align: center; background: transparent; font-size: 17px; cursor: pointer;">Batal</button>
+                    <button class="btn-batal" onclick="tutupKalenderVisual()" style="width: 100%; border: none; font-weight: 600; color: #007AFF !important; padding: 16px; text-align: center; background: transparent; font-size: 17px; cursor: pointer;">Batal</button>
                 </div>
             </div>
         `;
@@ -135,7 +209,7 @@ function renderKalenderVisual() {
     const prevMonthDays = new Date(thn, bln, 0).getDate(); 
     for (let i = 0; i < firstDay; i++) { 
         const prevDayNum = prevMonthDays - (firstDay - 1) + i;
-        grid.innerHTML += `<div class="tgl-item-global disabled-day" style="color: var(--text-primary);">${prevDayNum}</div>`; 
+        grid.innerHTML += `<div class="tgl-item-global disabled-day">${prevDayNum}</div>`; 
     }
 
     // 2. TANGGAL BULAN INI
@@ -147,23 +221,17 @@ function renderKalenderVisual() {
         const dayOfWeek = (firstDay + d - 1) % 7;
         let classes = "tgl-item-global";
         if (dayOfWeek === 0) classes += " minggu"; 
-        
         if (tglFullStr === todayStr) classes += " today"; 
-        
-        let customStyle = "color: var(--text-primary);";
-        if (tglFullStr === targetVal) {
-            // Style jika tanggal terpilih
-            customStyle = `background-color: #007AFF; color: white;`;
-        }
+        if (tglFullStr === targetVal) classes += " selected"; 
 
-        grid.innerHTML += `<div class="${classes}" style="${customStyle}" onclick="pilihTanggal(${d}, ${bln}, ${thn})">${d}</div>`;
+        grid.innerHTML += `<div class="${classes}" onclick="pilihTanggal(${d}, ${bln}, ${thn})">${d}</div>`;
     }
 
     // 3. FILLER BULAN DEPAN
     const totalCellsSoFar = firstDay + daysInMonth;
     const remainingCells = (7 - (totalCellsSoFar % 7)) % 7;
     for (let i = 1; i <= remainingCells; i++) {
-        grid.innerHTML += `<div class="tgl-item-global disabled-day" style="color: var(--text-primary);">${i}</div>`; 
+        grid.innerHTML += `<div class="tgl-item-global disabled-day">${i}</div>`; 
     }
 }
 
@@ -188,7 +256,6 @@ function tutupKalenderVisual() {
         window.removeEventListener('popstate', window.handleBackKalenderVisual);
     }
 }
-
 
 
 // ==========================================
@@ -397,16 +464,27 @@ function formatRupiah(input) {
     input.value = angka.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
+// ==========================================
+// FIX SCROLL JUMPY & MODAL SCROLLING
+// ==========================================
 document.addEventListener('touchmove', function(event) {
+    // 1. Tambahkan class/id area yang BOLEH di-scroll di sini
     const isScrollable = event.target.closest('.ios-popup-body') || 
+                         event.target.closest('.ios-modal-body') || 
+                         event.target.closest('#containerListKerja') || 
                          event.target.closest('.calendar-grid') || 
                          event.target.closest('.picker-grid') ||
                          event.target.closest('#areaHasilRincian') ||
                          event.target.closest('#areaListEdit') ||
                          event.target.closest('#areaFormEdit') ||
                          event.target.closest('#areaHasilGaji') ||
-                         event.target.closest('.grid-kalender-container'); 
-    if (!isScrollable) {
+                         event.target.closest('#kalenderScrollArea'); // <-- Ini id baru untuk body kalender visual 
+                         
+    // 2. Cek apakah ADA modal/popup yang sedang terbuka?
+    const hasActiveModal = document.querySelector('.ios-overlay[style*="display: flex"]');
+    
+    // 3. Hanya blokir scroll JIKA modal sedang terbuka DAN yang disentuh bukan area scrollable
+    if (hasActiveModal && !isScrollable) {
         event.preventDefault();
     }
 }, { passive: false });
@@ -470,7 +548,6 @@ const IOSAlert = {
 
         let buttonHTML = '';
         if (!isToast) {
-            // FIX: Pengaturan Lebar Flex Button Secara Eksplisit
             buttonHTML = `
                 <div style="border-top: 1px solid ${borderColor}; display: flex; width: 100%;">
                     ${teksBatal ? `<button id="iosAlertCancel" style="flex: 1; width: 50%; padding: 13px 0; background: transparent; border: none; border-right: 1px solid ${borderColor}; color: #007AFF; font-size: 17px; cursor: pointer;">${teksBatal}</button>` : ''}
@@ -516,15 +593,22 @@ const IOSAlert = {
     }
 };
 
-function muatDataHeader() {
+window.muatDataHeader = function() {
     const elNama = document.getElementById('displayNamaLengkap');
     const elUser = document.getElementById('displayUsername');
     if (!elNama && !elUser) return;
 
+    // 1. TAHAP PERTAMA: AMBIL DARI MEMORI HP DULU (Tampil Instan 0 Detik)
+    const cachedNama = localStorage.getItem('nama_user');
+    const cachedUser = localStorage.getItem('username');
+    
+    if (cachedNama && elNama) elNama.innerText = cachedNama.toUpperCase();
+    if (cachedUser && elUser) elUser.innerText = '@' + cachedUser.toLowerCase();
+
+    // 2. TAHAP KEDUA: SINKRONISASI DATABASE DI BACKGROUND
     firebase.auth().onAuthStateChanged((user) => {
         if (!user) return;
 
-        // Dengarkan perubahan data user di Firebase Realtime Database
         const userRef = window.db.ref(user.uid);
         userRef.on('value', (snapshot) => {
             const data = snapshot.val() || {};
@@ -534,12 +618,11 @@ function muatDataHeader() {
             if (elNama) elNama.innerText = nama.toUpperCase();
             if (elUser) elUser.innerText = '@' + username.toLowerCase();
 
-            // Update localStorage agar fallback saat reload
             localStorage.setItem('nama_user', nama);
             localStorage.setItem('username', username);
         });
     });
-}
+};
 
 function updateWaktu() {
     const sekarang = new Date();

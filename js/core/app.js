@@ -1,12 +1,14 @@
-// js/core/app.js - Pusat Kontrol FIVE STAR 2 (Fix Splash Screen)
+// =============================================================================
+// js/core/app.js - PUSAT KONTROL FIVE STAR 2 & SISTEM AUTO-UPDATE PWA
 // Dikembangkan oleh: RONNY (2026)
+// =============================================================================
+
+let newWorker; // Menyimpan service worker yang baru di-download
 
 document.addEventListener('DOMContentLoaded', () => {
-    const isLoginPage = window.location.pathname.includes('index.html') || window.location.pathname === '/';
     
-    // --- FUNGSI PENGHANCUR LOADING BAWAAN HTML ---
+    // --- 1. PENGHANCUR LOADING BAWAAN HTML ---
     function hapusLoadingLayar() {
-        // Tepat menembak ID splashScreen sesuai file index.html
         const loadingEl = document.getElementById('splashScreen');
         if (loadingEl) {
             loadingEl.style.transition = "opacity 0.3s ease";
@@ -14,75 +16,25 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => { loadingEl.style.display = 'none'; }, 300);
         }
     }
+    hapusLoadingLayar();
 
-    // --- 1. SECURITY GUARD & SESSION ---
-    const firebaseTimeout = setTimeout(() => {
-        hapusLoadingLayar();
-        if (isLoginPage) {
-            if (typeof inisialisasiLogin === 'function') inisialisasiLogin();
-        } else {
-            console.error("Firebase tidak merespon. Cek koneksi internet.");
-        }
-    }, 5000);
-
-    firebase.auth().onAuthStateChanged(async (user) => {
-        clearTimeout(firebaseTimeout); 
-        
-        if (user) {
-            console.log("Sesi Aktif: " + user.email);
-            localStorage.setItem('isLoggedIn', 'true');
-
-            if (isLoginPage) {
-                window.location.href = 'dashboard.html';
-            } else {
-                hapusLoadingLayar(); 
-                if (typeof refreshDataProfilUI === 'function') refreshDataProfilUI();
-                await jalankanPolisiAbsen(user);
-            }
-        } else {
-            console.log("Tidak ada sesi aktif.");
-            localStorage.setItem('isLoggedIn', 'false');
-            
-            if (!isLoginPage) {
-                window.location.href = "index.html"; 
-            } else {
-                hapusLoadingLayar(); // Hancurkan loading sebelum buka form!
-                
-                if (typeof inisialisasiLogin === 'function') {
-                    inisialisasiLogin(); 
-                } else if (typeof bukaOpsiSesi === 'function') {
-                    bukaOpsiSesi();
-                } else {
-                    console.log("Menunggu login.js siap...");
-                    let percobaan = 0;
-                    const tungguLogin = setInterval(() => {
-                        percobaan++;
-                        if (typeof inisialisasiLogin === 'function') {
-                            clearInterval(tungguLogin);
-                            inisialisasiLogin();
-                        } else if (percobaan > 50) {
-                            clearInterval(tungguLogin);
-                            console.error("FATAL: login.js tidak ditemukan di index.html!");
-                        }
-                    }, 100);
-                }
-            }
-        }
-    });
-
-    // --- 2. REGISTER SERVICE WORKER (PWA) ---
+    // --- 2. SISTEM AUTO-UPDATE MURNI DARI SERVICE WORKER (PWA) ---
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').then(reg => {
+            // Deteksi jika ada file sw.js baru yang ditemukan di server
             reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
+                newWorker = reg.installing;
+                
                 newWorker.addEventListener('statechange', () => {
+                    // Jika SW baru selesai di-download dan menunggu diaktifkan
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        tampilkanNotifUpdate(reg);
+                        tampilkanPopupUpdatePWA();
                     }
                 });
             });
-        }).catch(err => console.log('PWA Error:', err));
+        }).catch(err => console.log("SW Register Error:", err));
 
+        // Deteksi jika Service Worker baru mengambil alih, lalu Refresh Halaman otomatis
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
             if (!refreshing) {
@@ -92,6 +44,64 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- TRIGGER UTAMA (TOMBOL ON) UNTUK POLISI ABSEN & NOTIF ---
+// Menunggu Firebase Auth siap, lalu jalankan fungsi background
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        // Beri jeda 1.5 detik agar semua file script (absen.js dll) & DOM selesai dimuat
+        setTimeout(() => {
+            jalankanPolisiAbsen(user);
+            tampilkanNotifNative();
+        }, 1500); 
+    }
+});
+
+
+// --- UI POP-UP WAJIB UPDATE (Tampilan Premium) ---
+function tampilkanPopupUpdatePWA() {
+    let updateModal = document.getElementById('forceUpdateModal');
+    if (!updateModal) {
+        // Injeksi keyframe untuk animasi popup jika belum ada
+        if (!document.getElementById('anim-popup-update')) {
+            const style = document.createElement('style');
+            style.id = 'anim-popup-update';
+            style.innerHTML = `@keyframes popUpdate { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }`;
+            document.head.appendChild(style);
+        }
+
+        updateModal = document.createElement('div');
+        updateModal.id = 'forceUpdateModal';
+        updateModal.className = 'ios-overlay';
+        updateModal.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); z-index: 99999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);`;
+        
+        updateModal.innerHTML = `
+            <div style="width: 300px; background: var(--card-bg, #ffffff); border-radius: 18px; padding: 25px 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); animation: popUpdate 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;">
+                <div style="width: 60px; height: 60px; background: rgba(0, 122, 255, 0.1); color: #007AFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; font-size: 28px;">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </div>
+                <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 800; color: var(--text-primary, #000);">Pembaruan Tersedia</h3>
+                <p style="margin: 0 0 20px 0; font-size: 14px; color: #8E8E93; line-height: 1.4;">Ada fitur baru dan perbaikan sistem. Silakan perbarui aplikasi sekarang.</p>
+                <button onclick="eksekusiUpdatePWA()" style="width: 100%; background: #007AFF; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-download"></i> Perbarui Sekarang
+                </button>
+            </div>
+        `;
+        document.body.appendChild(updateModal);
+    }
+}
+
+// Fungsi eksekusi tombol Update
+function eksekusiUpdatePWA() {
+    const btn = document.querySelector('#forceUpdateModal button');
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memperbarui Sistem...';
+
+    // Kirim pesan ke sw.js untuk skip waiting (mengaktifkan versi baru)
+    if (newWorker) {
+        newWorker.postMessage({ type: 'SKIP_WAITING' });
+    }
+}
+
 
 // --- 3. PATROLI POLISI ABSEN ---
 window.antrianAbsenBolong = [];
@@ -141,8 +151,13 @@ async function jalankanPolisiAbsen(user) {
 }
 
 function panggilModalAntrean() {
-    if (window.antrianAbsenBolong.length > 0 && typeof window.bukaMenuAbsen === 'function') {
-        window.bukaMenuAbsen(null, window.antrianAbsenBolong[0], null, true); 
+    if (window.antrianAbsenBolong.length > 0) {
+        // Cek apakah absen.js sudah ter-load dengan benar
+        if (typeof window.bukaMenuAbsen === 'function') {
+            window.bukaMenuAbsen(null, window.antrianAbsenBolong[0], null, true); 
+        } else {
+            console.error("Fungsi window.bukaMenuAbsen tidak ditemukan! Pastikan absen.js sudah dimuat.");
+        }
     }
 }
 
@@ -155,18 +170,8 @@ window.aturNantiSemua = function() {
     }
 };
 
-// --- 4. NOTIFIKASI UPDATE ---
-function tampilkanNotifUpdate(reg) {
-    if (typeof IOSAlert !== 'undefined') {
-        IOSAlert.show("Update Tersedia", "Versi terbaru FIVE STAR 2 siap digunakan.", {
-            teksTombol: "Segarkan",
-            onConfirm: () => {
-                if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-            }
-        });
-    }
-}
 
+// --- 4. NOTIFIKASI PENGINGAT NATIVE (JAM 09:30) ---
 function tampilkanNotifNative() {
     const sudahAbsenHariIni = typeof cekStatusAbsenLokal === 'function' ? cekStatusAbsenLokal() : false; 
     if (sudahAbsenHariIni) return;
