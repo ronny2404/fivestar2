@@ -66,9 +66,9 @@ function bukaMenuKerja(event) {
         modal.innerHTML = `
             <div class="ios-modal-form profile-expand-anim" style="width: 100%; max-width: 100%; height: 100%; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg);">
                 
-                <div class="ios-modal-header" style="flex-shrink: 0; border-bottom: 0.5px solid rgba(142,142,147,0.2); padding-top: calc(10px + env(safe-area-inset-top)); padding-bottom: 10px; position: relative; display: flex; align-items: center; justify-content: center; min-height: 44px;">
+                <div class="ios-modal-header" style="flex-shrink: 0; border-bottom: 0.5px solid rgba(142,142,147,0.2); padding-top: calc(10px + env(safe-area-inset-top)); padding-bottom: 10px; position: relative; display: flex; align-items: center; justify-content: center;">
                     
-                    ${tombolKembaliIos} <h3 style="margin: 0; color: var(--text-primary); font-size: 15px; text-align: center; width: 100%; font-weight: 700;">INPUT PEKERJAAN</h3>
+                    ${tombolKembaliIos} <h3 style="margin: 0; color: var(--text-primary); font-size: 20px; text-align: center; width: 100%; font-weight: 700;">INPUT PEKERJAAN</h3>
                 </div>
 
                 
