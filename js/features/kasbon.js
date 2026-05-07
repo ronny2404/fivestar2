@@ -54,12 +54,20 @@ function bukaMenuKasbon(event) {
         modal.style.overscrollBehavior = 'none'; // Kunci layar belakang
         
         const inputStyle = "background: var(--bg-color); border: 2px solid transparent; padding: 12px; border-radius: 10px; width: 100%; box-sizing: border-box; outline: none; color: var(--text-primary); font-size: 14px; transition: 0.3s;";
-
+        
+        // Tentukan tombol kembali: Hanya muncul jika isIos() bernilai true
+        const tombolKembaliIos = isIos() ?
+            `<button onclick="tutupPopupKerja()" style="background:transparent; border:none; color:#007AFF; font-size:16px; padding: 5px 10px; display:flex; align-items:center; gap:5px; position:absolute; left:10px; z-index:10; top: 50%; transform: translateY(-50%);">
+                    <i class="fa-solid fa-chevron-left"></i> Selesai
+               </button>` :
+            '';
+        
         modal.innerHTML = `
             <div class="ios-modal-form profile-expand-anim" style="width: 100%; max-width: 100%; height: 100%; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg);">
                 
-                <div class="ios-modal-header" style="flex-shrink: 0; border-bottom: 0.5px solid rgba(142,142,147,0.2); padding-top: calc(10px + env(safe-area-inset-top)); padding-bottom: 10px;">
-                    <h3 style="margin: 0; color: var(--text-primary); font-size: 15px; text-align: center; width: 100%;">INPUT KASBON</h3>
+                <div class="ios-modal-header" style="flex-shrink: 0; border-bottom: 0.5px solid rgba(142,142,147,0.2); padding-top: calc(10px + env(safe-area-inset-top)); padding-bottom: 10px; position: relative; display: flex; align-items: center; justify-content: center;">
+                    
+                    ${tombolKembaliIos} <h3 style="margin: 0; color: var(--text-primary); font-size: 20px; text-align: center; width: 100%;">INPUT KASBON</h3>
                 </div>
                 
                 <div class="ios-modal-body" style="padding: 0; display: flex; flex-direction: column; flex: 1; overflow: hidden;">
