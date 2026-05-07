@@ -575,7 +575,7 @@ function prosesLogout() {
                 localStorage.setItem('isLoggedIn', 'false');
 
                 // Menggunakan replace agar history dihancurkan (Kembali ke login)
-                window.location.replace('login.html');
+                window.location.replace('index.html');
             });
         }
     });
@@ -616,6 +616,6 @@ async function prosesHapusAkun() {
         localStorage.clear(); 
         
         // Pindah ke login setelah akun terhapus
-        window.location.replace('login.html');
+        window.location.replace('index.html');
     } catch (e) { btn.innerText = "Hapus"; IOSAlert.show("Gagal", "Sandi salah atau error sistem."); }
 }
