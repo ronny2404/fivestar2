@@ -1,82 +1,110 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gateway - FIVE STAR 2</title>
-    
-    <meta name="theme-color" content="#007AFF">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="assets/icon-1.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dashboard FIVE STAR 2</title>
 
-    <style>
-        /* CSS INTERNAL: Memastikan loading super cepat tanpa menunggu main.css */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #F2F2F7; }
-        body.dark-theme { background: #000000; }
-        
-        .loader-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center; z-index: 30000;
-        }
-        .ios-spinner {
-            width: 35px; height: 35px; border: 3px solid rgba(142, 142, 147, 0.2);
-            border-top-color: #007AFF; border-radius: 50%; animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
+<meta name="theme-color" content="#007AFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icon-1.png">
 
-    <script>
-        // 1. TEMA INSTAN (Mencegah Layar Putih Berkedip)
-        (function() {
-            const savedTheme = localStorage.getItem('app-theme');
-            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const isDark = savedTheme === 'dark' || (!savedTheme && systemDark);
-            if (isDark) {
-                document.documentElement.classList.add('dark-theme');
-                window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-theme'));
-            }
-        })();
-    </script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/main.css">
+
+<script>
+    // SATPAM DASHBOARD - CEK SEBELUM HALAMAN DIMUAT
+(function() {
+        const status = localStorage.getItem('isLoggedIn');
+        // Jika di memori statusnya tidak true, langsung tendang balik ke login
+        if (status !== 'true') {
+            window.location.replace('login.html');
+        }
+    })();
+(function() {
+    function applyTheme() {
+        const savedTheme = localStorage.getItem('app-theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = savedTheme === 'dark' || (!savedTheme && systemDark);
+        document.documentElement.classList.toggle('dark-theme', isDark);
+        if (document.body) document.body.classList.toggle('dark-theme', isDark);
+    }
+    applyTheme();
+    window.addEventListener('DOMContentLoaded', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (!localStorage.getItem('app-theme')) applyTheme();
+    });
+})();
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+<script src="js/core/firebase.js"></script>
+<script src="js/core/main.js"></script>
+<script src="js/core/app.js"></script>
 </head>
 <body>
-    
-    <div id="splashScreen" class="loader-container">
-        <div class="ios-spinner"></div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
-    <script src="js/core/firebase.js"></script>
-    <script src="js/core/app.js"></script>
+<div class="app-container">
+    <header style="padding:0 20px 10px 20px;">
+        <div class="profile-info" style="display:flex; align-items:center; gap:15px;">
+            <a href="#" onclick="bukaPopupProfil(event)" class="profile-pic-wrapper"
+               style="width:100px;height:100px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--card-bg);display:flex;align-items:center;justify-content:center;border:2px solid rgba(0,122,255,0.1);">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238e8e93'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'%3E%3C/path%3E%3C/svg%3E" 
+                     alt="Profile" class="profile-pic" style="width:100%;height:100%;object-fit:cover;">
+            </a>
+            <div class="user-text-wrapper" style="display:flex;flex-direction:column;justify-content:center;">
+                <h1 class="user-name" id="displayNamaLengkap" style="font-size:20px;font-weight:700;margin:0;line-height:1.2;">-</h1>
+                <span class="user-handle" id="displayUsername" style="font-size:14px;color:#8E8E93;margin-top:2px;">@...</span>
+            </div>
+        </div>
+    </header>
 
     <script>
-        // ==========================================
-        // GATEWAY LOGIC - PENGHANCUR RIWAYAT
-        // ==========================================
-        document.addEventListener("DOMContentLoaded", function() {
-            const statusLokal = localStorage.getItem('isLoggedIn');
-            
-            // 1. CEK CEPAT: Jika memori lokal bilang false, langsung tendang ke Login (Tanpa nunggu Firebase)
-            if (statusLokal !== 'true') {
-                window.location.replace('login.html');
-                return;
-            }
-
-            // 2. CEK AKURAT: Pengecekan sesi ke server Firebase
-            firebase.auth().onAuthStateChanged((user) => {
-                if (user && statusLokal === 'true') {
-                    // Valid! Ganti halaman ke Dashboard dan HAPUS index.html dari riwayat
-                    window.location.replace('dashboard.html');
-                } else {
-                    // Tidak valid! Bersihkan memori lalu ke Login
-                    localStorage.setItem('isLoggedIn', 'false');
-                    window.location.replace('login.html');
-                }
-            });
-        });
+        // EKSEKUSI INSTAN: Agar nama langsung ganti tanpa nunggu file bawah selesai dimuat
+        if (typeof muatDataHeader === 'function') muatDataHeader();
     </script>
+
+    <div class="datetime-container" style="text-align:center;margin-top:20px;margin-bottom:-20px;">
+        <span id="jam-sekarang" style="font-size:38px;font-weight:800;color:var(--text-primary);letter-spacing:-1.5px;display:block;line-height:1;">00:00:00</span>
+        <span id="tanggal-sekarang" style="font-size:13px;color:#007AFF;font-weight:700;margin-top:8px;display:block;text-transform:uppercase;letter-spacing:1px;">Memuat Tanggal...</span>
+    </div>
+
+    <main class="grid-menu" style="margin-top:40px;padding:0 20px 30px 20px;">
+        <a href="#" class="menu-card" onclick="bukaMenuKerja(event)">
+            <i class="fa-solid fa-briefcase icon icon-kerja"></i><span class="menu-title">Kerja</span>
+        </a>
+        <a href="#" class="menu-card" onclick="bukaKalenderAbsen(event)">
+            <i class="fa-solid fa-list-check icon icon-absensi"></i><span class="menu-title">Absen</span>
+        </a>
+        <a href="#" class="menu-card" onclick="bukaMenuKasbon(event)">
+            <i class="fa-solid fa-money-bill-wave icon icon-kasbon"></i><span class="menu-title">Kasbon</span>
+        </a>
+        <a href="#" class="menu-card" onclick="bukaMenuRincian(event)">
+            <i class="fa-solid fa-file-invoice icon icon-rincian"></i><span class="menu-title">Rincian</span>
+        </a>
+        <a href="#" class="menu-card" onclick="bukaMenuGaji(event)">
+            <i class="fa-solid fa-sack-dollar icon icon-gaji"></i><span class="menu-title">Gaji</span>
+        </a>
+        
+        <a href="#" class="menu-card" onclick="bukaMenuPengaturan(event)">
+            <i class="fa-solid fa-gear icon icon-pengaturan"></i><span class="menu-title">Pengaturan</span>
+        </a>
+        </main>
+</div>
+<script src="js/core/log.js"></script>
+<script src="js/user/profil.js"></script>
+<script src="js/user/pengaturan.js"></script>
+<script src="js/features/absen.js"></script>
+<script src="js/features/kalender-absen.js"></script>
+<script src="js/features/kerja.js"></script>
+<script src="js/features/kasbon.js"></script>
+<script src="js/features/rincian.js"></script>
+<script src="js/features/gaji.js"></script>
+<script src="js/features/edit-data.js"></script>
+
 </body>
 </html>
