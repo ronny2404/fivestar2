@@ -66,7 +66,7 @@ function bukaMenuPengaturan(event) {
         modal.innerHTML = `
             <div id="kotakLengkungPengaturan" class="ios-modal-form modal-zoom-linear" style="width: 340px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg); border-radius: 20px;">
                 <div class="ios-modal-header" style="flex-shrink: 0; border-bottom: 0.5px solid rgba(142,142,147,0.2);">
-                    <h3 id="judulPengaturan" style="margin:0; color: var(--text-primary);">Pengaturan</h3>
+                    <h3 id="judulPengaturan" style="margin:0; color: var(--text-primary);">PENGATURAN</h3>
                 </div>
                 <div id="kontenPengaturan" class="ios-modal-body" style="padding: 20px 15px; display: flex; flex-direction: column; flex-grow: 1; overflow-y: auto;"></div>
                 <div id="footerPengaturan" class="ios-modal-footer-grid" style="flex-shrink: 0; border-top: 0.5px solid rgba(142,142,147,0.2);"></div>
@@ -525,8 +525,8 @@ function renderInformasiAplikasi(isBackNav = false) {
     gantiLayar('Informasi Aplikasi', `
         <div class="fixed-height-skeleton">
             <div style="text-align: center; padding: 10px 0 20px;">
-                <div style="width: 80px; height: 80px; border-radius: 18px; overflow: hidden; margin: 0 auto 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: white;">
-                    <img src="assets/icon-1.png" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">
+                <div style="width: 80px; height: 80px; border-radius: 18px; overflow: hidden; margin: 0 auto 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); //background: white;">
+                    <img src="assets/icon-1-v2.png" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
                 <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: var(--text-primary);">FIVE STAR 2</h2>
                 <p id="teksVersiApp" style="font-size: 13px; color: #8E8E93; margin-top: 4px;">Memuat versi...</p>
