@@ -18,32 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     hapusLoadingLayar();
 
-    // ==========================================
-    // --- 1.5 GATEWAY LOGIC DENGAN JEDA (UNTUK PWA) ---
-    // ==========================================
-    const pathSaatIni = window.location.pathname;
-
-    if (pathSaatIni.endsWith('index.html') || pathSaatIni === '/' || pathSaatIni === '') {
-        setTimeout(() => {
-            const statusLokal = localStorage.getItem('isLoggedIn');
-            
-            if (statusLokal !== 'true') {
-                window.location.replace('login.html');
-                return;
-            }
-
-            if (typeof firebase !== 'undefined') {
-                firebase.auth().onAuthStateChanged((user) => {
-                    if (user && statusLokal === 'true') {
-                        window.location.replace('dashboard.html');
-                    } else {
-                        localStorage.setItem('isLoggedIn', 'false');
-                        window.location.replace('login.html');
-                    }
-                });
-            }
-        }, 1500); 
-    }
 
     // --- 2. SISTEM AUTO-UPDATE MURNI DARI SERVICE WORKER (PWA) ---
     if ('serviceWorker' in navigator) {
