@@ -242,7 +242,7 @@ function tembakNotifSekarang() {
         registration.showNotification("Peringatan Absen - FIVE STAR 2", {
             body: `Halo ${namaPemilik}, waktu menunjukkan pukul 09:30. Yuk absen masuk sekarang agar rekam kerjamu tersimpan!`,
             icon: "assets/icon-5.png", // Icon resolusi tinggi
-            badge: "assets/icon-1.png", // Icon kecil di status bar (sebaiknya warna solid putih/transparan)
+            badge: "assets/icon-1-v2.png", // Icon kecil di status bar (sebaiknya warna solid putih/transparan)
             vibrate: [300, 100, 300, 100, 300], // Pola getaran khas peringatan Android
             tag: tagHariIni, // ID unik harian, mencegah notif ganda
             renotify: true,
