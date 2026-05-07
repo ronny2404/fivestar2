@@ -6,7 +6,7 @@ const namaBulanGaji = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "
 // Target = Minimal Jam (FS1+FS2), Nominal = Uang Bonus
 const TIER_BONUS = [
     { target: 160, nominal: 500000 }, // X untuk 160 Jam
-    { target: 125, nominal: 350000 }, // X untuk 125 Jam
+    { target: 125, nominal: 375000 }, // X untuk 125 Jam
     { target: 85,  nominal: 250000 }, // X untuk 85 Jam
     { target: 50,  nominal: 125000 }  // X untuk 50 Jam
 ];
@@ -75,7 +75,7 @@ function bukaMenuGaji(event) {
 
         // Tentukan tombol kembali: Hanya muncul jika isIos() bernilai true
         const tombolKembaliIos = isIos() ?
-            `<button onclick="tutupPopupKerja()" style="background:transparent; border:none; color:#007AFF; font-size:16px; padding: 5px 10px; display:flex; align-items:center; gap:5px; position:absolute; left:10px; z-index:10; top: 50%; transform: translateY(-50%);">
+            `<button onclick="tutupMenuGaji()" style="background:transparent; border:none; color:#007AFF; font-size:16px; padding: 5px 10px; display:flex; align-items:center; gap:5px; position:absolute; left:10px; z-index:10; top: 50%; transform: translateY(-50%);">
                     <i class="fa-solid fa-chevron-left"></i> Selesai
                </button>` :
             '';
