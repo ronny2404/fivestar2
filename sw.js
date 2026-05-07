@@ -40,31 +40,37 @@ self.addEventListener('fetch', (event) => {
 
 // Listener ketika notifikasi atau tombol action di-klik oleh user
 self.addEventListener('notificationclick', function(event) {
-    event.notification.close(); // Tutup bar notifikasi di HP
+    event.notification.close(); // Tutup bar notifikasi
 
-    // Tentukan URL tujuan
     let targetUrl = 'index.html';
-    
-    // Jika tombol "Absen Sekarang" ditekan, tambahkan kode rahasia di URL
     if (event.action === 'buka-absen') {
         targetUrl = 'index.html?action=absen';
     }
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-            for (var i = 0; i < clientList.length; i++) {
-                var client = clientList[i];
-                // Jika aplikasi sudah terbuka di tab/background, fokuskan ke sana
-                if (client.url.includes('index.html') && 'focus' in client) {
+            // 1. Cek apakah aplikasi sudah terbuka (baik di background maupun sedang ditatap)
+            for (let i = 0; i < clientList.length; i++) {
+                let client = clientList[i];
+                
+                // Jika aplikasi terdeteksi, JANGAN buka window baru, cukup "bangunkan" (focus)
+                if (client.url && 'focus' in client) {
                     client.focus();
-                    // Kirim pesan tak terlihat ke app.js untuk segera buka modal absen
-                    if (event.action === 'buka-absen') {
-                        client.postMessage({ perintah: 'TRIGGER_ABSEN' });
+                    
+                    // Jika user sudah berada di area dashboard, tembak sinyal absen tanpa reload
+                    if (client.url.includes('dashboard.html')) {
+                        if (event.action === 'buka-absen') {
+                            client.postMessage({ perintah: 'TRIGGER_ABSEN' });
+                        }
+                    } else {
+                        // Jika posisinya di halaman login, arahkan navigasinya ke dashboard
+                        client.navigate(targetUrl);
                     }
-                    return;
+                    return; // KUNCI ANTI KEDIP: Hentikan kode di sini agar tidak memicu openWindow
                 }
             }
-            // Jika aplikasi dalam keadaan tertutup (di-kill), buka baru dengan URL khusus
+            
+            // 2. Jika aplikasi benar-benar mati (di-kill/di-swipe up), barulah buka jendela baru
             if (clients.openWindow) {
                 return clients.openWindow(targetUrl);
             }
