@@ -155,7 +155,7 @@ window.aturNantiSemua = function() {
     const modal = document.getElementById('absenModal'); 
     if (modal) modal.style.display = 'none'; 
     if (typeof IOSAlert !== 'undefined') {
-        IOSAlert.show("Peringatan", "Absenmu masih ada yang bolong. Jangan lupa dilengkapi nanti ya!"); history.go(-1);
+        IOSAlert.show("Peringatan", "Absenmu masih ada yang bolong. Jangan lupa dilengkapi nanti ya!"); history.go(-2);
     }
 };
 
