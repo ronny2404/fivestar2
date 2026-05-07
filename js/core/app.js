@@ -259,25 +259,29 @@ function tembakNotifSekarang() {
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     
-    // SKENARIO 1: Aplikasi baru dibuka dari posisi tertutup total via notif
+    // SKENARIO 1: Aplikasi baru dibuka dari posisi tertutup total (Di-kill)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('action') === 'absen') {
+        // Beri jeda 1,2 detik menunggu Firebase & struktur HTML siap
         setTimeout(() => {
             if (typeof window.bukaMenuAbsen === 'function') {
                 window.bukaMenuAbsen();
-                // Bersihkan URL agar popup tidak terus muncul jika halaman di-refresh manual
+                // Bersihkan URL agar popup absen tidak muncul lagi kalau HP di-refresh
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
-        }, 1000); // Jeda 1 detik menunggu Firebase & DOM stabil
+        }, 1200); 
     }
 
-    // SKENARIO 2: Aplikasi sudah terbuka di background dan menerima pesan dari sw.js
+    // SKENARIO 2: Aplikasi sudah terbuka di background lalu dibangunkan
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.addEventListener('message', (event) => {
             if (event.data && event.data.perintah === 'TRIGGER_ABSEN') {
-                if (typeof window.bukaMenuAbsen === 'function') {
-                    window.bukaMenuAbsen();
-                }
+                // JEDA ANTI KEDIP: Tunggu setengah detik (500ms) agar animasi buka aplikasi selesai dulu, baru popup muncul
+                setTimeout(() => {
+                    if (typeof window.bukaMenuAbsen === 'function') {
+                        window.bukaMenuAbsen();
+                    }
+                }, 500);
             }
         });
     }
