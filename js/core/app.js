@@ -18,15 +18,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     hapusLoadingLayar();
 
+    // ==========================================
+    // --- 1.5 GATEWAY LOGIC DENGAN JEDA (UNTUK PWA) ---
+    // ==========================================
+    const pathSaatIni = window.location.pathname;
+
+    if (pathSaatIni.endsWith('index.html') || pathSaatIni === '/' || pathSaatIni === '') {
+        setTimeout(() => {
+            const statusLokal = localStorage.getItem('isLoggedIn');
+            
+            if (statusLokal !== 'true') {
+                window.location.replace('login.html');
+                return;
+            }
+
+            if (typeof firebase !== 'undefined') {
+                firebase.auth().onAuthStateChanged((user) => {
+                    if (user && statusLokal === 'true') {
+                        window.location.replace('dashboard.html');
+                    } else {
+                        localStorage.setItem('isLoggedIn', 'false');
+                        window.location.replace('login.html');
+                    }
+                });
+            }
+        }, 1500); 
+    }
+
     // --- 2. SISTEM AUTO-UPDATE MURNI DARI SERVICE WORKER (PWA) ---
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').then(reg => {
-            // Deteksi jika ada file sw.js baru yang ditemukan di server
             reg.addEventListener('updatefound', () => {
                 newWorker = reg.installing;
                 
                 newWorker.addEventListener('statechange', () => {
-                    // Jika SW baru selesai di-download dan menunggu diaktifkan
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                         tampilkanPopupUpdatePWA();
                     }
@@ -34,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }).catch(err => console.log("SW Register Error:", err));
 
-        // Deteksi jika Service Worker baru mengambil alih, lalu Refresh Halaman otomatis
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
             if (!refreshing) {
@@ -46,13 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- TRIGGER UTAMA (TOMBOL ON) UNTUK POLISI ABSEN & NOTIF ---
-// Menunggu Firebase Auth siap, lalu jalankan fungsi background
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {
-        // Beri jeda 1.5 detik agar semua file script (absen.js dll) & DOM selesai dimuat
         setTimeout(() => {
             jalankanPolisiAbsen(user);
-            inisialisasiNotifikasi(); // Menjalankan sistem notif yang sudah di-upgrade
+            inisialisasiNotifikasi(); 
         }, 1500); 
     }
 });
@@ -62,7 +84,6 @@ firebase.auth().onAuthStateChanged((user) => {
 function tampilkanPopupUpdatePWA() {
     let updateModal = document.getElementById('forceUpdateModal');
     if (!updateModal) {
-        // Injeksi keyframe untuk animasi popup jika belum ada
         if (!document.getElementById('anim-popup-update')) {
             const style = document.createElement('style');
             style.id = 'anim-popup-update';
@@ -91,15 +112,10 @@ function tampilkanPopupUpdatePWA() {
     }
 }
 
-// Fungsi eksekusi tombol Update
 function eksekusiUpdatePWA() {
     const btn = document.querySelector('#forceUpdateModal button');
     if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memperbarui Sistem...';
-
-    // Kirim pesan ke sw.js untuk skip waiting (mengaktifkan versi baru)
-    if (newWorker) {
-        newWorker.postMessage({ type: 'SKIP_WAITING' });
-    }
+    if (newWorker) newWorker.postMessage({ type: 'SKIP_WAITING' });
 }
 
 
@@ -152,11 +168,10 @@ async function jalankanPolisiAbsen(user) {
 
 function panggilModalAntrean() {
     if (window.antrianAbsenBolong.length > 0) {
-        // Cek apakah absen.js sudah ter-load dengan benar
         if (typeof window.bukaMenuAbsen === 'function') {
             window.bukaMenuAbsen(null, window.antrianAbsenBolong[0], null, true); 
         } else {
-            console.error("Fungsi window.bukaMenuAbsen tidak ditemukan! Pastikan absen.js sudah dimuat.");
+            console.error("Fungsi window.bukaMenuAbsen tidak ditemukan!");
         }
     }
 }
@@ -173,56 +188,68 @@ window.aturNantiSemua = function() {
 
 // --- 4. SISTEM NOTIFIKASI PENGINGAT NATIVE (SMART TRIGGER 09:30) ---
 function inisialisasiNotifikasi() {
-    if (!("Notification" in window)) {
-        console.warn("Browser tidak mendukung notifikasi native.");
-        return;
-    }
+    if (!("Notification" in window)) return;
 
-    // Minta izin ke OS/Browser jika belum diizinkan atau ditolak
     if (Notification.permission === "granted") {
         jadwalkanNotifikasi();
     } else if (Notification.permission !== "denied") {
         Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                jadwalkanNotifikasi();
-            }
+            if (permission === "granted") jadwalkanNotifikasi();
         });
     }
 }
 
+// Fungsi Akurat: Cek penyimpanan lokal apakah ada data absen hari ini
+function apakahSudahAbsenHariIni() {
+    const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    const tglFullStr = new Date().toLocaleDateString('id-ID', opsi);
+    const dateId = tglFullStr.replace(', ', '_').replace(/ /g, '_');
+    
+    try {
+        const dataLokal = JSON.parse(localStorage.getItem('data_absen_current') || "{}");
+        if (dataLokal[dateId]) return true; // Sudah absen!
+    } catch (e) { console.error("Gagal baca data absen lokal", e); }
+
+    return false;
+}
+
 function jadwalkanNotifikasi() {
-    // Pastikan fungsi cekStatusAbsenLokal ada dan valid
-    const sudahAbsenHariIni = typeof cekStatusAbsenLokal === 'function' ? cekStatusAbsenLokal() : false; 
-    if (sudahAbsenHariIni) return; 
+    // 1. Jika sudah absen sejak awal, hentikan sistem alarm
+    if (apakahSudahAbsenHariIni()) return; 
 
     const waktuSekarang = new Date();
     const jamTarget = new Date();
     jamTarget.setHours(9, 30, 0, 0); 
 
     if (waktuSekarang >= jamTarget) {
-        tembakNotifSekarang();
+        // Jika buka aplikasi jam 10 pagi dan belum absen, langsung tembak
+        if (!apakahSudahAbsenHariIni()) tembakNotifSekarang();
     } else {
+        // Jika buka aplikasi jam 8 pagi, tunggu sampai jam 09:30
         const sisaWaktuMs = jamTarget.getTime() - waktuSekarang.getTime();
         setTimeout(() => {
-            const cekLagi = typeof cekStatusAbsenLokal === 'function' ? cekStatusAbsenLokal() : false;
-            if (!cekLagi) tembakNotifSekarang();
+            // Saat alarm meledak di jam 09:30, cek lagi! Siapa tahu dia udah absen di jam 09:00
+            if (!apakahSudahAbsenHariIni()) tembakNotifSekarang();
         }, sisaWaktuMs);
     }
 }
 
 function tembakNotifSekarang() {
-    // Memanggil nama user dari local storage, fallback ke RONNY
     const namaPemilik = localStorage.getItem('nama_user') || 'RONNY';
+    const tagHariIni = "absen-harian-" + new Date().toLocaleDateString('id-ID');
 
     navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification("FIVE STAR 2 - REMINDER", {
-            body: `Halo ${namaPemilik}, sudah jam 09:30 nih. Yuk absen dulu agar rekap kerja tetap sinkron!`,
-            icon: "assets/icon-1.png", 
-            badge: "assets/icon-1.png",
-            vibrate: [200, 100, 200, 100, 200],
-            tag: "absen-harian", 
+        registration.showNotification("Peringatan Absen - FIVE STAR 2", {
+            body: `Halo ${namaPemilik}, waktu menunjukkan pukul 09:30. Yuk absen masuk sekarang agar rekam kerjamu tersimpan!`,
+            icon: "assets/icon-5.png", // Icon resolusi tinggi
+            badge: "assets/icon-1.png", // Icon kecil di status bar (sebaiknya warna solid putih/transparan)
+            vibrate: [300, 100, 300, 100, 300], // Pola getaran khas peringatan Android
+            tag: tagHariIni, // ID unik harian, mencegah notif ganda
             renotify: true,
-            requireInteraction: true 
+            requireInteraction: true, // Notifikasi tidak akan hilang sendiri kecuali digeser/diklik
+            actions: [
+                { action: 'buka-absen', title: '✅ Absen Sekarang' }
+            ]
         });
     });
 }
