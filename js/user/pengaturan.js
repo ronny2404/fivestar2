@@ -218,7 +218,7 @@ function renderMenuPengaturan(isBackNav = false) {
                     <i class="fa-solid fa-chevron-right" style="${iconStyle}"></i>
                 </div>
             </div>
-            <button onclick="prosesLogout()" style="width: 100%; padding: 15px; border-radius: 12px; background: rgba(255,59,48,0.1); color: #FF3B30; border: 1px solid rgba(255,59,48,0.2); font-weight: 600; font-size: 16px; cursor: pointer; margin-top: auto;">Keluar dari Aplikasi</button>
+            <button onclick="prosesLogout()" style="width: 100%; padding: 15px; border-radius: 12px; background: rgba(255,59,48,0.1); color: #FF3B30; border: 1px solid rgba(255,59,48,0.2); font-weight: 600; font-size: 16px; cursor: pointer; margin-top: auto;">Logout</button>
         </div>
     `;
     const htmlFooter = `<button class="btn-footer-center" onclick="tutupPengaturan()">Tutup</button>`;
