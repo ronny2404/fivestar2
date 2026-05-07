@@ -203,7 +203,7 @@ window.addEventListener('popstate', (e) => {
                 localStorage.setItem('isLoggedIn', 'true');
                 
                 // PENTING: Gunakan replace agar history login dihapus
-                window.location.replace('dashboard.html');
+                window.location.replace('index.html');
             } catch (e) {
                 let msg = e.message;
                 if(e.code === 'auth/wrong-password') msg = "Kata sandi salah.";
@@ -231,7 +231,7 @@ window.addEventListener('popstate', (e) => {
                 await sinkronisasiDataUser(uid);
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('last_uid', uid);
-                window.location.replace('dashboard.html');
+                window.location.replace('index.html');
             }).catch(e => {
                 if(e.code !== 'auth/popup-closed-by-user') IOSAlert.show("Gagal Google", e.message);
             });
