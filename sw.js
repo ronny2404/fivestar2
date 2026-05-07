@@ -53,7 +53,7 @@ self.addEventListener('notificationclick', function(event) {
             }
             // Jika aplikasi belum terbuka, buka halaman utama
             if (clients.openWindow) {
-                return clients.openWindow('dashboard.html');
+                return clients.openWindow('index.html');
             }
         })
     );
