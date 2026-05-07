@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof firebase !== 'undefined') {
                 firebase.auth().onAuthStateChanged((user) => {
                     if (user && statusLokal === 'true') {
-                        window.location.replace('index.html');
+                        window.location.replace('dashboard.html');
                     } else {
                         localStorage.setItem('isLoggedIn', 'false');
                         window.location.replace('login.html');
@@ -221,68 +221,46 @@ function jadwalkanNotifikasi() {
     const jamTarget = new Date();
     jamTarget.setHours(9, 30, 0, 0); 
 
+    const opsiTgl = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    const tglHariIni = waktuSekarang.toLocaleDateString('id-ID', opsiTgl);
+    
+    // Cek di sistem HP apakah notif sudah pernah dikirim hari ini
+    const sudahDikirimHariIni = localStorage.getItem('status_notif_absen') === tglHariIni;
+
     if (waktuSekarang >= jamTarget) {
-        // Jika buka aplikasi jam 10 pagi dan belum absen, langsung tembak
-        if (!apakahSudahAbsenHariIni()) tembakNotifSekarang();
+        // Lewat jam 09:30, belum absen, dan notif belum pernah muncul
+        if (!sudahDikirimHariIni) {
+            tembakNotifSekarang(tglHariIni);
+        }
     } else {
-        // Jika buka aplikasi jam 8 pagi, tunggu sampai jam 09:30
+        // Buka aplikasi pagi hari sebelum 09:30, pasang timer
         const sisaWaktuMs = jamTarget.getTime() - waktuSekarang.getTime();
         setTimeout(() => {
-            // Saat alarm meledak di jam 09:30, cek lagi! Siapa tahu dia udah absen di jam 09:00
-            if (!apakahSudahAbsenHariIni()) tembakNotifSekarang();
+            // Saat jam 09:30, pastikan sekali lagi apakah dia sudah absen atau belum
+            if (!apakahSudahAbsenHariIni()) {
+                tembakNotifSekarang(tglHariIni);
+            }
         }, sisaWaktuMs);
     }
 }
 
-function tembakNotifSekarang() {
+function tembakNotifSekarang(tglId) {
     const namaPemilik = localStorage.getItem('nama_user') || 'RONNY';
     const tagHariIni = "absen-harian-" + new Date().toLocaleDateString('id-ID');
 
     navigator.serviceWorker.ready.then(registration => {
         registration.showNotification("Peringatan Absen - FIVE STAR 2", {
-            body: `Halo ${namaPemilik}, waktu menunjukkan pukul 09:30. Yuk absen masuk sekarang agar rekam kerjamu tersimpan!`,
-            icon: "assets/icon-5.png", // Icon resolusi tinggi
-            badge: "assets/icon-1-v2.png", // Icon kecil di status bar (sebaiknya warna solid putih/transparan)
-            vibrate: [300, 100, 300, 100, 300], // Pola getaran khas peringatan Android
-            tag: tagHariIni, // ID unik harian, mencegah notif ganda
-            renotify: true,
-            requireInteraction: true, // Notifikasi tidak akan hilang sendiri kecuali digeser/diklik
-            actions: [
-                { action: 'buka-absen', title: '✅ Absen Sekarang' }
-            ]
+            body: `Halo ${namaPemilik}, sudah lewat jam 09:30 nih. Yuk buka aplikasi dan absen sekarang!`,
+            icon: "assets/icon-5.png",
+            badge: "assets/icon-1-v2.png", 
+            vibrate: [300, 100, 300, 100, 300], 
+            tag: tagHariIni, 
+            renotify: false, // Jangan berdering berkali-kali jika tagnya sama
+            requireInteraction: true // Notif tetap muncul sampai digeser
+            // Tombol "Action" Dihapus
         });
+        
+        // Simpan ke memori bahwa hari ini sudah dikirim notifnya
+        if (tglId) localStorage.setItem('status_notif_absen', tglId);
     });
 }
-
-// ==========================================
-// --- 5. RECEIVER AKSI NOTIFIKASI NATIVE ---
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // SKENARIO 1: Aplikasi baru dibuka dari posisi tertutup total (Di-kill)
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('action') === 'absen') {
-        // Beri jeda 1,2 detik menunggu Firebase & struktur HTML siap
-        setTimeout(() => {
-            if (typeof window.bukaMenuAbsen === 'function') {
-                window.bukaMenuAbsen();
-                // Bersihkan URL agar popup absen tidak muncul lagi kalau HP di-refresh
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        }, 1200); 
-    }
-
-    // SKENARIO 2: Aplikasi sudah terbuka di background lalu dibangunkan
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.addEventListener('message', (event) => {
-            if (event.data && event.data.perintah === 'TRIGGER_ABSEN') {
-                // JEDA ANTI KEDIP: Tunggu setengah detik (500ms) agar animasi buka aplikasi selesai dulu, baru popup muncul
-                setTimeout(() => {
-                    if (typeof window.bukaMenuAbsen === 'function') {
-                        window.bukaMenuAbsen();
-                    }
-                }, 500);
-            }
-        });
-    }
-});
