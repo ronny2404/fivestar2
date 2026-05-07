@@ -584,10 +584,6 @@ function bukaPopupQRIS() {
                 
                 <div onclick="downloadGambarQRIS()" style="background: white; padding: 10px; border-radius: 12px; margin-bottom: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; position: relative; transition: transform 0.2s;">
                     <img src="assets/qris.jpg" alt="QRIS ALL PAYMENT" style="width: 100%; max-width: 150px; border-radius: 8px;">
-                    
-                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-                        <i class="fa-solid fa-download"></i> Simpan
-                    </div>
 
                     <div style="font-size: 10px; color: #007AFF; margin-top: 8px; font-weight: 800; letter-spacing: 0.5px;"><i class="fa-solid fa-hand-pointer"></i> KLIK UNTUK SIMPAN KE GALERI</div>
                 </div>
