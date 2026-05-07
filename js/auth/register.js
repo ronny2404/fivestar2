@@ -278,7 +278,7 @@ async function prosesDaftar() {
         
         IOSAlert.show("Berhasil", "Selamat Datang, " + nama, {
             teksTombol: "Masuk",
-            onConfirm: () => window.location.replace('dashboard.html')
+            onConfirm: () => window.location.replace('index.html')
         });
 
     } catch (e) {
