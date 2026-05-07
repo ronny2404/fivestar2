@@ -56,7 +56,7 @@ function bukaMenuRincian(event) {
 
         // Tentukan tombol kembali: Hanya muncul jika isIos() bernilai true
         const tombolKembaliIos = isIos() ?
-            `<button onclick="tutupPopupKerja()" style="background:transparent; border:none; color:#007AFF; font-size:16px; padding: 5px 10px; display:flex; align-items:center; gap:5px; position:absolute; left:10px; z-index:10; top: 50%; transform: translateY(-50%);">
+            `<button onclick="tutupMenuRincian()" style="background:transparent; border:none; color:#007AFF; font-size:16px; padding: 5px 10px; display:flex; align-items:center; gap:5px; position:absolute; left:10px; z-index:10; top: 50%; transform: translateY(-50%);">
                     <i class="fa-solid fa-chevron-left"></i> Selesai
                </button>` :
             '';
