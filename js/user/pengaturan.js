@@ -595,10 +595,10 @@ function bukaPopupQRIS() {
                 <div style="background: rgba(142,142,147,0.1); border-radius: 12px; padding: 12px; margin-bottom: 20px; text-align: left; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <div style="font-size: 11px; color: #8E8E93; font-weight: 600; margin-bottom: 4px; text-transform: uppercase;">Transfer Manual</div>
-                        <div style="font-size: 15px; font-weight: 800; color: var(--text-primary); letter-spacing: 1px;">BCA - 1234567890</div>
-                        <div style="font-size: 12px; color: var(--text-primary); margin-top: 2px;">a.n. <span style="font-weight: 600;">RONNY</span></div>
+                        <div style="font-size: 15px; font-weight: 800; color: var(--text-primary); letter-spacing: 1px;">BCA - 0482153907</div>
+                        <div style="font-size: 12px; color: var(--text-primary); margin-top: 2px;">a.n. <span style="font-weight: 600;">ENDAH WULANSARI</span></div>
                     </div>
-                    <button onclick="salinRekening('1234567890', this)" style="background: #007AFF; color: white; border: none; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">Salin</button>
+                    <button onclick="salinRekening('0482153907', this)" style="background: #007AFF; color: white; border: none; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">Salin</button>
                 </div>
                 
                 <div style="display: flex; gap: 10px;">
@@ -657,7 +657,7 @@ function salinRekening(nomor, btnEl) {
 window.downloadGambarQRIS = function() {
     // Membuat elemen link sementara untuk memicu download
     const linkDownload = document.createElement('a');
-    linkDownload.href = 'assets/81424.jpg'; // Path gambar QRIS kamu
+    linkDownload.href = 'assets/qris.jpg'; // Path gambar QRIS kamu
     linkDownload.download = 'QRIS_FIVESTAR2.jpg'; // Nama file saat disimpan di HP
     
     document.body.appendChild(linkDownload);
