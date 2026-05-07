@@ -525,7 +525,7 @@ function renderInformasiAplikasi(isBackNav = false) {
     gantiLayar('Informasi Aplikasi', `
         <div class="fixed-height-skeleton">
             <div style="text-align: center; padding: 10px 0 20px;">
-                <div style="width: 80px; height: 80px; border-radius: 18px; overflow: hidden; margin: 0 auto 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); //background: white;">
+                <div style="width: 80px; height: 80px; border-radius: 18px; overflow: hidden; margin: 0 auto 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
                     <img src="assets/icon-1-v2.png" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
                 <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: var(--text-primary);">FIVE STAR 2</h2>
@@ -539,12 +539,12 @@ function renderInformasiAplikasi(isBackNav = false) {
             </div>
 
             <div class="list-group-ios" style="margin-top: 5px;">
-                <div onclick="window.open('https://link.dana.id/minta?full_url=https://qr.dana.id/v1/281012012019022054429359', '_blank')" style="${listStyleLast}">
+                <div onclick="bukaPopupQRIS()" style="${listStyleLast}">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <div style="width: 28px; height: 28px; background: #118EEA; border-radius: 7px; display: flex; justify-content: center; align-items: center; color: white;"><i class="fa-solid fa-wallet"></i></div>
                         <span style="color: #007AFF;">Dukung Pengembang (DANA)</span>
                     </div>
-                    <i class="fa-solid fa-arrow-up-right-from-square" style="${iconStyle}"></i>
+                    <i class="fa-solid fa-qrcode" style="${iconStyle}"></i>
                 </div>
             </div>
 
@@ -560,6 +560,62 @@ function bacaVersiDariSW() {
         const el = document.getElementById('teksVersiApp');
         if (el) el.innerText = m ? 'Versi ' + m[1].replace(/cache-|fivestar-/gi, '') : 'Versi PWA Aktif';
     }).catch(() => { if (document.getElementById('teksVersiApp')) document.getElementById('teksVersiApp').innerText = 'Versi Standard'; });
+}
+
+// ==========================================
+// --- FUNGSI POPUP QRIS DONASI ---
+// ==========================================
+function bukaPopupQRIS() {
+    let qrisModal = document.getElementById('qrisModal');
+    
+    // Jika elemen modal belum ada, buat baru
+    if (!qrisModal) {
+        qrisModal = document.createElement('div');
+        qrisModal.id = 'qrisModal';
+        qrisModal.className = 'ios-overlay';
+        qrisModal.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 99999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);`;
+        
+        qrisModal.innerHTML = `
+            <div class="modal-zoom-linear" style="width: 300px; background: var(--card-bg, #ffffff); border-radius: 20px; padding: 25px 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+                <div style="width: 50px; height: 50px; background: rgba(17, 142, 234, 0.1); color: #118EEA; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; font-size: 24px;">
+                    <i class="fa-solid fa-qrcode"></i>
+                </div>
+                <h3 style="margin: 0 0 15px 0; font-size: 18px; font-weight: 800; color: var(--text-primary);">Scan QRIS DANA</h3>
+                
+                <div style="background: white; padding: 10px; border-radius: 12px; margin-bottom: 20px; display: inline-block;">
+                    <img src="assets/qris.jpg" alt="QRIS DANA" style="width: 100%; max-width: 250px; border-radius: 8px;">
+                </div>
+                
+                <p style="font-size: 13px; color: #8E8E93; margin-top: 0; margin-bottom: 20px; line-height: 1.4;">Buka aplikasi DANA atau Mobile Banking lainnya, lalu scan kode QR di atas untuk berdonasi.</p>
+                <button onclick="tutupPopupQRIS()" style="width: 100%; background: #007AFF; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer;">Tutup Layar</button>
+            </div>
+        `;
+        document.body.appendChild(qrisModal);
+    }
+    
+    // Tampilkan modal dan masukkan ke history (agar bisa di-back)
+    qrisModal.style.display = 'flex';
+    history.pushState({ id: 'modalQRIS' }, '', '');
+    
+    // Penanganan tombol Back (Navigasi Anti-Tumpuk)
+    window.handleBackQRIS = function(e) {
+        if (!e.state || e.state.id !== 'modalQRIS') {
+            const m = document.getElementById('qrisModal');
+            if (m) m.style.display = 'none';
+            window.removeEventListener('popstate', window.handleBackQRIS);
+        }
+    };
+    window.addEventListener('popstate', window.handleBackQRIS);
+}
+
+function tutupPopupQRIS() {
+    if (history.state && history.state.id === 'modalQRIS') {
+        history.back(); // Ini akan memicu popstate dan menutup modal secara otomatis
+    } else {
+        const m = document.getElementById('qrisModal');
+        if (m) m.style.display = 'none';
+        window.removeEventListener('popstate', window.handleBackQRIS);
+    }
 }
 
 // --- 8. LOGOUT & HAPUS AKUN ---
