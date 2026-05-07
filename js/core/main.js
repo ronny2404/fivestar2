@@ -519,10 +519,11 @@ if (themeToggleBtn) {
 }
 
 // ==========================================
-// IOSAlert - NATIVE LOOK & 50:50 BUTTON RATIO
+// IOSAlert - PERBAIKAN TOMBOL BACK
 // ==========================================
 const IOSAlert = {
     show: function(judul, pesan, opsi = {}) {
+        // Hapus alert lama jika masih ada
         const existing = document.getElementById('iosAlertOverlay');
         if (existing) existing.remove();
 
@@ -532,10 +533,11 @@ const IOSAlert = {
         const onCancel = opsi.onCancel || null;
         const durasi = opsi.durasi || 2000; 
 
-        // State Inheritance pada IOSAlert (Leveling)
+        // Level navigasi history
         const baseLvl = (history.state && history.state.level) ? history.state.level : 10;
         const myLvl = baseLvl + 1;
-        history.pushState({ id: 'iosAlert', level: myLvl }, '', '');
+        const myId = 'iosAlert_' + Date.now(); // ID unik tiap alert
+        history.pushState({ id: myId, level: myLvl }, '', '');
 
         const overlay = document.createElement('div');
         overlay.id = 'iosAlertOverlay';
@@ -573,27 +575,59 @@ const IOSAlert = {
 
         document.body.appendChild(overlay);
 
-        const tutupAlertInternal = () => {
+        // FUNGSI TUTUP YANG AMAN
+        const tutupAlertInternal = (jalankanAksi = true, isBatal = false) => {
             overlay.style.opacity = '0';
             const card = overlay.querySelector('div');
             if (card) card.style.transform = 'scale(0.9)';
+            
+            // Hapus event listener agar tidak tumpuk
             window.removeEventListener('popstate', handleBackHP);
-            setTimeout(() => overlay.remove(), 250);
+            
+            setTimeout(() => {
+                overlay.remove();
+                // Jalankan aksi setelah tutup
+                if (jalankanAksi) {
+                    if (isBatal && onCancel) onCancel();
+                    if (!isBatal && onConfirm) onConfirm();
+                }
+            }, 250);
         };
 
+        // HANDLER TOMBOL KEMBALI / GESTUR KEMBALI
         const handleBackHP = (e) => {
-            const currentLvl = e.state ? (e.state.level || 0) : 0;
-            if (currentLvl < myLvl) tutupAlertInternal();
+            if (!e.state) return;
+            // Tutup hanya jika state yang keluar adalah milik alert ini
+            if (e.state.id === myId && e.state.level === myLvl) {
+                tutupAlertInternal(false); // Tidak jalankan aksi konfirmasi saat tombol back
+            }
         };
         window.addEventListener('popstate', handleBackHP);
 
-        requestAnimationFrame(() => { overlay.style.opacity = '1'; overlay.querySelector('div').style.transform = 'scale(1)'; });
+        // ANIMASI MUNCUL
+        requestAnimationFrame(() => { 
+            overlay.style.opacity = '1'; 
+            overlay.querySelector('div').style.transform = 'scale(1)'; 
+        });
 
+        // AKSI TOMBOL
         if (!isToast) {
-            document.getElementById('iosAlertConfirm').onclick = () => { history.back(); if (onConfirm) onConfirm(); };
-            if (teksBatal) document.getElementById('iosAlertCancel').onclick = () => { history.back(); if (onCancel) onCancel(); };
+            document.getElementById('iosAlertConfirm').onclick = () => { 
+                history.back(); 
+                tutupAlertInternal(true, false);
+            };
+            if (teksBatal) {
+                document.getElementById('iosAlertCancel').onclick = () => { 
+                    history.back(); 
+                    tutupAlertInternal(true, true);
+                };
+            }
         } else {
-            setTimeout(() => { if (history.state && history.state.id === 'iosAlert') history.back(); }, durasi);
+            // Toast otomatis tertutup
+            setTimeout(() => { 
+                if (history.state && history.state.id === myId) history.back();
+                tutupAlertInternal(false);
+            }, durasi);
         }
     }
 };
