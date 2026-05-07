@@ -542,7 +542,7 @@ function renderInformasiAplikasi(isBackNav = false) {
                 <div onclick="bukaPopupQRIS()" style="${listStyleLast}">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <div style="width: 28px; height: 28px; background: #118EEA; border-radius: 7px; display: flex; justify-content: center; align-items: center; color: white;"><i class="fa-solid fa-wallet"></i></div>
-                        <span style="color: #007AFF;">Dukung Pengembang (DANA)</span>
+                        <span style="color: #007AFF;">Dukung Pengembang</span>
                     </div>
                     <i class="fa-solid fa-qrcode" style="${iconStyle}"></i>
                 </div>
@@ -583,7 +583,7 @@ function bukaPopupQRIS() {
                 <p style="font-size: 12px; color: #8E8E93; margin-top: 0; margin-bottom: 15px; line-height: 1.4;">Klik gambar QRIS untuk menyimpan, atau klik DANA untuk langsung buka aplikasi.</p>
                 
                 <div onclick="downloadGambarQRIS()" style="background: white; padding: 10px; border-radius: 12px; margin-bottom: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; position: relative; transition: transform 0.2s;">
-                    <img src="assets/81424.jpg" alt="QRIS ALL PAYMENT" style="width: 100%; max-width: 150px; border-radius: 8px;">
+                    <img src="assets/qris.jpg" alt="QRIS ALL PAYMENT" style="width: 100%; max-width: 150px; border-radius: 8px;">
                     
                     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
                         <i class="fa-solid fa-download"></i> Simpan
