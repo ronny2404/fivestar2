@@ -563,12 +563,11 @@ function bacaVersiDariSW() {
 }
 
 // ==========================================
-// --- FUNGSI POPUP QRIS DONASI ---
+// --- FUNGSI POPUP QRIS & REKENING ---
 // ==========================================
 function bukaPopupQRIS() {
     let qrisModal = document.getElementById('qrisModal');
     
-    // Jika elemen modal belum ada, buat baru
     if (!qrisModal) {
         qrisModal = document.createElement('div');
         qrisModal.id = 'qrisModal';
@@ -576,28 +575,47 @@ function bukaPopupQRIS() {
         qrisModal.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 99999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);`;
         
         qrisModal.innerHTML = `
-            <div class="modal-zoom-linear" style="width: 300px; background: var(--card-bg, #ffffff); border-radius: 20px; padding: 25px 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
-                <div style="width: 50px; height: 50px; background: rgba(17, 142, 234, 0.1); color: #118EEA; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; font-size: 24px;">
-                    <i class="fa-solid fa-qrcode"></i>
+            <div class="modal-zoom-linear" style="width: 320px; background: var(--card-bg, #ffffff); border-radius: 20px; padding: 25px 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+                <div style="width: 50px; height: 50px; background: rgba(52, 199, 89, 0.1); color: #34C759; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto; font-size: 24px;">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
                 </div>
-                <h3 style="margin: 0 0 15px 0; font-size: 18px; font-weight: 800; color: var(--text-primary);">Scan QRIS DANA</h3>
+                <h3 style="margin: 0 0 5px 0; font-size: 18px; font-weight: 800; color: var(--text-primary);">Dukung Pengembang</h3>
+                <p style="font-size: 12px; color: #8E8E93; margin-top: 0; margin-bottom: 15px; line-height: 1.4;">Klik gambar QRIS untuk menyimpan, atau klik DANA untuk langsung buka aplikasi.</p>
                 
-                <div style="background: white; padding: 10px; border-radius: 12px; margin-bottom: 20px; display: inline-block;">
-                    <img src="assets/qris.jpg" alt="QRIS DANA" style="width: 100%; max-width: 250px; border-radius: 8px;">
+                <div onclick="downloadGambarQRIS()" style="background: white; padding: 10px; border-radius: 12px; margin-bottom: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; position: relative; transition: transform 0.2s;">
+                    <img src="assets/81424.jpg" alt="QRIS ALL PAYMENT" style="width: 100%; max-width: 150px; border-radius: 8px;">
+                    
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                        <i class="fa-solid fa-download"></i> Simpan
+                    </div>
+
+                    <div style="font-size: 10px; color: #007AFF; margin-top: 8px; font-weight: 800; letter-spacing: 0.5px;"><i class="fa-solid fa-hand-pointer"></i> KLIK UNTUK SIMPAN KE GALERI</div>
                 </div>
                 
-                <p style="font-size: 13px; color: #8E8E93; margin-top: 0; margin-bottom: 20px; line-height: 1.4;">Buka aplikasi DANA atau Mobile Banking lainnya, lalu scan kode QR di atas untuk berdonasi.</p>
-                <button onclick="tutupPopupQRIS()" style="width: 100%; background: #007AFF; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer;">Tutup Layar</button>
+                <div style="background: rgba(142,142,147,0.1); border-radius: 12px; padding: 12px; margin-bottom: 20px; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 11px; color: #8E8E93; font-weight: 600; margin-bottom: 4px; text-transform: uppercase;">Transfer Manual</div>
+                        <div style="font-size: 15px; font-weight: 800; color: var(--text-primary); letter-spacing: 1px;">BCA - 1234567890</div>
+                        <div style="font-size: 12px; color: var(--text-primary); margin-top: 2px;">a.n. <span style="font-weight: 600;">RONNY</span></div>
+                    </div>
+                    <button onclick="salinRekening('1234567890', this)" style="background: #007AFF; color: white; border: none; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">Salin</button>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="tutupPopupQRIS()" style="flex: 1; background: rgba(142,142,147,0.15); color: var(--text-primary); border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer;">Tutup</button>
+                    
+                    <button onclick="window.location.href='https://link.dana.id/minta?full_url=https://qr.dana.id/v1/281012012019022054429359'" style="flex: 1; background: #118EEA; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="fa-solid fa-wallet"></i> Buka DANA
+                    </button>
+                </div>
             </div>
         `;
         document.body.appendChild(qrisModal);
     }
     
-    // Tampilkan modal dan masukkan ke history (agar bisa di-back)
     qrisModal.style.display = 'flex';
     history.pushState({ id: 'modalQRIS' }, '', '');
     
-    // Penanganan tombol Back (Navigasi Anti-Tumpuk)
     window.handleBackQRIS = function(e) {
         if (!e.state || e.state.id !== 'modalQRIS') {
             const m = document.getElementById('qrisModal');
@@ -610,13 +628,48 @@ function bukaPopupQRIS() {
 
 function tutupPopupQRIS() {
     if (history.state && history.state.id === 'modalQRIS') {
-        history.back(); // Ini akan memicu popstate dan menutup modal secara otomatis
+        history.back(); 
     } else {
         const m = document.getElementById('qrisModal');
         if (m) m.style.display = 'none';
         window.removeEventListener('popstate', window.handleBackQRIS);
     }
 }
+
+// Fitur auto-copy ke clipboard
+function salinRekening(nomor, btnEl) {
+    navigator.clipboard.writeText(nomor).then(() => {
+        const teksAsli = btnEl.innerText;
+        btnEl.innerText = "Tersalin!";
+        btnEl.style.background = "#34C759"; 
+        setTimeout(() => {
+            btnEl.innerText = teksAsli;
+            btnEl.style.background = "#007AFF"; 
+        }, 2000);
+    }).catch(err => {
+        if (typeof IOSAlert !== 'undefined') {
+            IOSAlert.show("Gagal", "Tidak dapat menyalin rekening.");
+        }
+    });
+}
+
+// --- FUNGSI BARU: DOWNLOAD GAMBAR QRIS ---
+window.downloadGambarQRIS = function() {
+    // Membuat elemen link sementara untuk memicu download
+    const linkDownload = document.createElement('a');
+    linkDownload.href = 'assets/81424.jpg'; // Path gambar QRIS kamu
+    linkDownload.download = 'QRIS_FIVESTAR2.jpg'; // Nama file saat disimpan di HP
+    
+    document.body.appendChild(linkDownload);
+    linkDownload.click();
+    document.body.removeChild(linkDownload);
+    
+    // Tampilkan notifikasi jika pengguna berhasil mengunduh
+    if (typeof IOSAlert !== 'undefined') {
+        IOSAlert.show("Tersimpan!", "Gambar QRIS berhasil diunduh ke Galeri. Silakan buka aplikasi M-Banking Anda lalu pilih ikon gambar (upload) saat di menu Scan.");
+    }
+};
+
 
 // --- 8. LOGOUT & HAPUS AKUN ---
 function prosesLogout() {
