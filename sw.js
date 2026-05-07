@@ -38,22 +38,35 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(fetch(event.request));
 });
 
-// Listener ketika notifikasi di-klik oleh user
+// Listener ketika notifikasi atau tombol action di-klik oleh user
 self.addEventListener('notificationclick', function(event) {
-    event.notification.close(); // Tutup bar notifikasi
+    event.notification.close(); // Tutup bar notifikasi di HP
+
+    // Tentukan URL tujuan
+    let targetUrl = 'index.html';
+    
+    // Jika tombol "Absen Sekarang" ditekan, tambahkan kode rahasia di URL
+    if (event.action === 'buka-absen') {
+        targetUrl = 'index.html?action=absen';
+    }
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-            // Jika aplikasi sudah terbuka, fokuskan saja ke tab tersebut
             for (var i = 0; i < clientList.length; i++) {
                 var client = clientList[i];
-                if (client.url === '/' && 'focus' in client) {
-                    return client.focus();
+                // Jika aplikasi sudah terbuka di tab/background, fokuskan ke sana
+                if (client.url.includes('index.html') && 'focus' in client) {
+                    client.focus();
+                    // Kirim pesan tak terlihat ke app.js untuk segera buka modal absen
+                    if (event.action === 'buka-absen') {
+                        client.postMessage({ perintah: 'TRIGGER_ABSEN' });
+                    }
+                    return;
                 }
             }
-            // Jika aplikasi belum terbuka, buka halaman utama
+            // Jika aplikasi dalam keadaan tertutup (di-kill), buka baru dengan URL khusus
             if (clients.openWindow) {
-                return clients.openWindow('index.html');
+                return clients.openWindow(targetUrl);
             }
         })
     );
