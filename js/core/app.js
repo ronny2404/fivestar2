@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof firebase !== 'undefined') {
                 firebase.auth().onAuthStateChanged((user) => {
                     if (user && statusLokal === 'true') {
-                        window.location.replace('dashboard.html');
+                        window.location.replace('index.html');
                     } else {
                         localStorage.setItem('isLoggedIn', 'false');
                         window.location.replace('login.html');
@@ -253,3 +253,32 @@ function tembakNotifSekarang() {
         });
     });
 }
+
+// ==========================================
+// --- 5. RECEIVER AKSI NOTIFIKASI NATIVE ---
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // SKENARIO 1: Aplikasi baru dibuka dari posisi tertutup total via notif
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'absen') {
+        setTimeout(() => {
+            if (typeof window.bukaMenuAbsen === 'function') {
+                window.bukaMenuAbsen();
+                // Bersihkan URL agar popup tidak terus muncul jika halaman di-refresh manual
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }, 1000); // Jeda 1 detik menunggu Firebase & DOM stabil
+    }
+
+    // SKENARIO 2: Aplikasi sudah terbuka di background dan menerima pesan dari sw.js
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.perintah === 'TRIGGER_ABSEN') {
+                if (typeof window.bukaMenuAbsen === 'function') {
+                    window.bukaMenuAbsen();
+                }
+            }
+        });
+    }
+});
