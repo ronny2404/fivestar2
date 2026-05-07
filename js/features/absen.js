@@ -217,7 +217,7 @@ async function simpanAbsen(isPolisiMode = false) {
             }
         } else {
             // --- MODE TOAST (NORMAL) ---
-            IOSAlert.show("Berhasil", "Absen berhasil disimpan!"); history.go(-1);
+            IOSAlert.show("Berhasil", "Absen berhasil disimpan!"); history.go(-2);
             tutupMenuAbsen();
         }
     } catch (e) {
