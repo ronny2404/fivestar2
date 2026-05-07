@@ -65,8 +65,8 @@ function tembakNotifSekarang() {
     navigator.serviceWorker.ready.then(registration => {
         registration.showNotification("FIVE STAR 2 - REMINDER", {
             body: `Halo ${namaPemilik}, sudah jam 09:30 nih. Yuk absen dulu agar rekap kerja tetap sinkron!`,
-            icon: "assets/icon-192.png", // Pastikan path icon ini valid di server
-            badge: "assets/icon-192.png",
+            icon: "assets/icon-1.png", // Pastikan path icon ini valid di server
+            badge: "assets/icon-1.png",
             vibrate: [200, 100, 200, 100, 200],
             tag: "absen-harian", // Tag mencegah notif numpuk berjejer
             renotify: true,
