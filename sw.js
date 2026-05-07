@@ -38,41 +38,22 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(fetch(event.request));
 });
 
-// Listener ketika notifikasi atau tombol action di-klik oleh user
+// Listener ketika notifikasi di-klik oleh user
 self.addEventListener('notificationclick', function(event) {
-    event.notification.close(); // Tutup bar notifikasi
-
-    let targetUrl = 'index.html';
-    if (event.action === 'buka-absen') {
-        targetUrl = 'index.html?action=absen';
-    }
+    event.notification.close(); // Menutup bar notifikasi di atas layar
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-            // 1. Cek apakah aplikasi sudah terbuka (baik di background maupun sedang ditatap)
+            // Jika aplikasi sudah terbuka (baik sedang dilihat atau di background), fokuskan layarnya
             for (let i = 0; i < clientList.length; i++) {
                 let client = clientList[i];
-                
-                // Jika aplikasi terdeteksi, JANGAN buka window baru, cukup "bangunkan" (focus)
-                if (client.url && 'focus' in client) {
-                    client.focus();
-                    
-                    // Jika user sudah berada di area dashboard, tembak sinyal absen tanpa reload
-                    if (client.url.includes('dashboard.html')) {
-                        if (event.action === 'buka-absen') {
-                            client.postMessage({ perintah: 'TRIGGER_ABSEN' });
-                        }
-                    } else {
-                        // Jika posisinya di halaman login, arahkan navigasinya ke dashboard
-                        client.navigate(targetUrl);
-                    }
-                    return; // KUNCI ANTI KEDIP: Hentikan kode di sini agar tidak memicu openWindow
+                if (client.url.includes('index.html') && 'focus' in client) {
+                    return client.focus();
                 }
             }
-            
-            // 2. Jika aplikasi benar-benar mati (di-kill/di-swipe up), barulah buka jendela baru
+            // Jika aplikasi dalam posisi mati/tertutup, buka ke halaman dashboard
             if (clients.openWindow) {
-                return clients.openWindow(targetUrl);
+                return clients.openWindow('index.html');
             }
         })
     );
